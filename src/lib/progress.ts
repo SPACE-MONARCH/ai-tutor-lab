@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/auth";
+import { db } from "@/lib/firebase/config";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export type ModuleProgress = {
   search: number;
@@ -27,6 +30,7 @@ const DEFAULT_PROGRESS: LabProgress = {
 };
 
 export function useLabProgress() {
+  const { user } = useAuth();
   const [progress, setProgress] = useState<LabProgress>(DEFAULT_PROGRESS);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -58,10 +62,43 @@ export function useLabProgress() {
     };
   }, []);
 
-  const saveProgress = (newProgress: LabProgress) => {
+  // Sync to Cloud When User Auth Loads
+  useEffect(() => {
+    async function syncCloud() {
+      if (!user || !db) return;
+      try {
+        const docRef = doc(db, "users", user.uid, "progress");
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const cloudData = docSnap.data().data as LabProgress;
+          if (cloudData && cloudData.modules) {
+             setProgress(cloudData);
+             localStorage.setItem("lab-progress", JSON.stringify(cloudData));
+          }
+        } else {
+          // New cloud document, upload local
+          await setDoc(docRef, { data: progress }, { merge: true });
+        }
+      } catch (err) {
+        console.warn("Cloud sync failed. Operating locally.", err);
+      }
+    }
+    syncCloud();
+  }, [user]);
+
+  const saveProgress = async (newProgress: LabProgress) => {
     setProgress(newProgress);
     localStorage.setItem("lab-progress", JSON.stringify(newProgress));
     window.dispatchEvent(new CustomEvent("lab-progress-updated", { detail: newProgress }));
+    
+    if (user && db) {
+      try {
+        await setDoc(doc(db, "users", user.uid, "progress"), { data: newProgress }, { merge: true });
+      } catch (err) {
+        console.warn("Cloud save failed.", err);
+      }
+    }
   };
 
   const markQuizComplete = (score: number) => {

@@ -25,6 +25,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useLabProgress } from "@/lib/progress";
+import { useAuth } from "@/lib/auth";
 
 /* ── Navigation data ── */
 type NavItem = { label: string; icon: any; href: string; active?: boolean };
@@ -172,6 +173,7 @@ export default function LabLayout({
   const [isMounted, setIsMounted] = useState(false);
   
   const { progress, completedCount, completionPercentage, isLoaded } = useLabProgress();
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
     setIsMounted(true);
@@ -227,11 +229,16 @@ export default function LabLayout({
           </button>
           <div className="flex items-center gap-3 pl-4 border-l border-white/10">
             <div className="text-right hidden sm:block">
-              <p className="text-xs font-bold leading-none">Neural_Admin</p>
-              <p className="text-[10px] text-[#8eff71]">Lvl 14 Expert</p>
+              <p className="text-xs font-bold leading-none">
+                 {isLoading ? "Connecting..." : user ? `Neural_User_${user.uid.slice(0, 4)}` : "Guest"}
+              </p>
+              <p className="text-[10px] text-[#8eff71]">
+                 {user ? "Cloud Synced" : "Local Mode"}
+              </p>
             </div>
-            <button className="w-10 h-10 rounded-full bg-[#262626] border border-[#8eff71]/30 flex items-center justify-center transition-transform active:scale-90">
-              <UserCircle size={22} className="text-[#8eff71]" />
+            <button className="relative w-10 h-10 rounded-full bg-[#262626] border border-[#8eff71]/30 flex items-center justify-center transition-transform active:scale-90 overflow-hidden">
+              {user && <div className="absolute inset-0 bg-[#39FF14]/20 animate-pulse" />}
+              <UserCircle size={22} className="text-[#8eff71] relative z-10" />
             </button>
           </div>
         </div>

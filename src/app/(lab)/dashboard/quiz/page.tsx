@@ -8,32 +8,11 @@ import confetti from "canvas-confetti";
 import { Question, Difficulty, getInitialQuestions, getAdaptiveQuestion } from "@/lib/quiz-bank";
 import { getQuizExplanation } from "./actions";
 import { useLabProgress } from "@/lib/progress";
-
-// Optional Firebase auth - mock if fails
-import { initializeApp } from "firebase/app";
-import { getAuth, signInAnonymously } from "firebase/auth";
-import { getFirestore, doc, setDoc, serverTimestamp } from "firebase/firestore";
-
-// Initialize Firebase if env vars exist
-let db: any = null;
-let auth: any = null;
-if (process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-  try {
-    const app = initializeApp({
-      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    });
-    auth = getAuth(app);
-    db = getFirestore(app);
-  } catch (e) {
-    console.error("Firebase init failed", e);
-  }
-}
+import { useAuth } from "@/lib/auth";
 
 export default function AdaptiveQuizPage() {
   const { markQuizComplete } = useLabProgress();
+  const { user } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   
@@ -116,28 +95,9 @@ export default function AdaptiveQuizPage() {
     setIsFinished(true);
     confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 }, zIndex: 100 });
     
-    // Save globally to ring
+    // Save globally to ring & Firestore automatically via useLabProgress
     markQuizComplete(finalScore);
-    
-    // Save Score
-    if (auth && db) {
-       try {
-         const cred = await signInAnonymously(auth);
-         await setDoc(doc(db, "quiz_scores", cred.user.uid), {
-             score: finalScore,
-             maxStreak: finalStreak,
-             timestamp: serverTimestamp(),
-             modules: 6
-         }, { merge: true });
-         setSavedLocally(true); // Firebase worked
-       } catch (error) {
-         console.warn("Anon Auth/Save failed. Check Firebase rules.", error);
-       }
-    } else {
-        // Fallback Local Storage
-        localStorage.setItem("AI_LAB_SCORE", finalScore.toString());
-        setSavedLocally(true);
-    }
+    setSavedLocally(!!user);
   };
 
   const resetQuiz = () => {
@@ -188,7 +148,7 @@ export default function AdaptiveQuizPage() {
                   </div>
 
                   <div className="bg-[#131313] border border-white/10 rounded-lg p-3 text-xs font-mono text-[#8eff71] relative z-10 w-full mb-8">
-                     {savedLocally ? "> Score recorded to global registry successfully." : "> Local session completed. Unregistered user."}
+                     {savedLocally ? "> Score recorded to global cloud registry successfully." : "> Local session completed. Sync pending."}
                   </div>
 
                   <button 
