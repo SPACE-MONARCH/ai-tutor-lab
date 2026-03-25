@@ -36,12 +36,21 @@ import {
   AlgorithmType,
   SearchResult,
   SearchStep,
+  GraphNode,
+  GraphEdge,
+  GraphSearchResult,
+  GraphSearchStep,
+  runGraphSearchAlgorithm,
 } from "@/lib/search-algorithms";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { NodeGraphViz } from "@/components/search/NodeGraphViz";
 
 const GRID_SIZE = 8;
 type Tool = "start" | "goal" | "wall" | "empty" | "weight";
+type Mode = "grid" | "graph";
 
 export default function SearchPlaygroundPage() {
+  const [mode, setMode] = useState<Mode>("grid");
   // --- States ---
   const [grid, setGrid] = useState<Grid>(() => {
     const init: Grid = [];
@@ -60,6 +69,25 @@ export default function SearchPlaygroundPage() {
   const [startPoint, setStartPoint] = useState<Point>({ x: 1, y: 1 });
   const [goalPoint, setGoalPoint] = useState<Point>({ x: 6, y: 6 });
 
+  // --- Graph States ---
+  const [graphNodes, setGraphNodes] = useState<GraphNode[]>([
+    { id: "A", x: 100, y: 150 },
+    { id: "B", x: 250, y: 50 },
+    { id: "C", x: 250, y: 250 },
+    { id: "D", x: 450, y: 150 },
+  ]);
+  const [graphEdges, setGraphEdges] = useState<GraphEdge[]>([
+    { source: "A", target: "B", weight: 1 },
+    { source: "A", target: "C", weight: 4 },
+    { source: "B", target: "D", weight: 5 },
+    { source: "C", target: "D", weight: 1 },
+  ]);
+  const [graphStart, setGraphStart] = useState("A");
+  const [graphGoal, setGraphGoal] = useState("D");
+
+  const [graphResult1, setGraphResult1] = useState<GraphSearchResult | null>(null);
+  const [graphResult2, setGraphResult2] = useState<GraphSearchResult | null>(null);
+
   const [activeTool, setActiveTool] = useState<Tool>("wall");
   const [stampWeight, setStampWeight] = useState(5);
   const [isCompareMode, setIsCompareMode] = useState(false);
@@ -77,9 +105,12 @@ export default function SearchPlaygroundPage() {
   const playInterval = useRef<NodeJS.Timeout | null>(null);
 
   const maxSteps = Math.max(
-    result1?.steps.length || 0,
-    isCompareMode ? (result2?.steps.length || 0) : 0
+    mode === "grid" 
+      ? Math.max(result1?.steps.length || 0, isCompareMode ? (result2?.steps.length || 0) : 0)
+      : Math.max(graphResult1?.steps.length || 0, isCompareMode ? (graphResult2?.steps.length || 0) : 0)
   );
+
+  const hasResult = mode === "grid" ? !!result1 : !!graphResult1;
 
   // --- Handlers ---
   const handleCellClick = (x: number, y: number) => {
@@ -121,17 +152,29 @@ export default function SearchPlaygroundPage() {
   const handleRun = () => {
     setIsPlaying(false);
     clearInterval(playInterval.current!);
-
-    const r1 = runSearchAlgorithm(grid, startPoint, goalPoint, algo1);
-    setResult1(r1);
-
-    if (isCompareMode) {
-      const r2 = runSearchAlgorithm(grid, startPoint, goalPoint, algo2);
-      setResult2(r2);
-    } else {
-      setResult2(null);
-    }
     setCurrentStep(0);
+
+    if (mode === "grid") {
+      const r1 = runSearchAlgorithm(grid, startPoint, goalPoint, algo1);
+      setResult1(r1);
+
+      if (isCompareMode) {
+        const r2 = runSearchAlgorithm(grid, startPoint, goalPoint, algo2);
+        setResult2(r2);
+      } else {
+        setResult2(null);
+      }
+    } else {
+      const r1 = runGraphSearchAlgorithm(graphNodes, graphEdges, graphStart, graphGoal, algo1);
+      setGraphResult1(r1);
+
+      if (isCompareMode) {
+        const r2 = runGraphSearchAlgorithm(graphNodes, graphEdges, graphStart, graphGoal, algo2);
+        setGraphResult2(r2);
+      } else {
+        setGraphResult2(null);
+      }
+    }
   };
 
   const togglePlay = () => {
@@ -273,11 +316,15 @@ export default function SearchPlaygroundPage() {
       {/* ── Header ── */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h1 className="font-['Space_Grotesk'] text-3xl md:text-4xl font-bold text-white mb-2">
+          <h1 className="font-['Space_Grotesk'] text-3xl md:text-4xl font-bold text-white mb-2 flex items-center gap-4">
             Search <span className="text-[#00d4ec] neon-text-primary text-shadow-none shadow-[#00d4ec]">Playground</span>
+            <ToggleGroup type="single" value={mode} onValueChange={(v) => v && setMode(v as Mode)} className="bg-[#131313] border border-white/10 rounded-lg h-9">
+               <ToggleGroupItem value="grid" className="text-xs px-3 data-[state=on]:bg-[#00d4ec]/20 data-[state=on]:text-[#00d4ec]">Grid World</ToggleGroupItem>
+               <ToggleGroupItem value="graph" className="text-xs px-3 data-[state=on]:bg-[#39FF14]/20 data-[state=on]:text-[#39FF14]">Node Graph</ToggleGroupItem>
+            </ToggleGroup>
           </h1>
           <p className="text-[#adaaaa] text-sm md:text-base max-w-xl">
-            Design grid worlds and visualize search algorithms navigating state-spaces.
+            Visualize pathfinding algorithms across matrix grids and arbitrary node-edge graphs.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -299,8 +346,47 @@ export default function SearchPlaygroundPage() {
         {/* ── Visualizer Area ── */}
         <div className="lg:col-span-8 space-y-6">
           <div className={`grid grid-cols-1 ${isCompareMode ? "md:grid-cols-2" : ""} gap-6`}>
-            {renderGrid(result1, algo1)}
-            {isCompareMode && renderGrid(result2, algo2)}
+            {mode === "grid" ? (
+              <>
+                 {renderGrid(result1, algo1)}
+                 {isCompareMode && renderGrid(result2, algo2)}
+              </>
+            ) : (
+              <>
+                 <NodeGraphViz
+                   nodes={graphNodes}
+                   edges={graphEdges}
+                   onNodesChange={setGraphNodes}
+                   onEdgesChange={setGraphEdges}
+                   startNode={graphStart}
+                   goalNode={graphGoal}
+                   onSetStart={setGraphStart}
+                   onSetGoal={setGraphGoal}
+                   activeTool={activeTool}
+                   stampWeight={stampWeight}
+                   stepData={graphResult1?.steps[Math.min(currentStep, graphResult1.steps.length - 1)]}
+                   title={algo1}
+                   isPlaying={isPlaying}
+                 />
+                 {isCompareMode && (
+                   <NodeGraphViz
+                     nodes={graphNodes}
+                     edges={graphEdges}
+                     onNodesChange={setGraphNodes}
+                     onEdgesChange={setGraphEdges}
+                     startNode={graphStart}
+                     goalNode={graphGoal}
+                     onSetStart={setGraphStart}
+                     onSetGoal={setGraphGoal}
+                     activeTool={activeTool}
+                     stampWeight={stampWeight}
+                     stepData={graphResult2?.steps[Math.min(currentStep, graphResult2.steps.length - 1)]}
+                     title={algo2}
+                     isPlaying={isPlaying}
+                   />
+                 )}
+              </>
+            )}
           </div>
 
           {/* Timeline and Playback Controls */}
@@ -308,7 +394,7 @@ export default function SearchPlaygroundPage() {
             <div className="flex items-center justify-between gap-4">
               <button
                 onClick={() => setCurrentStep(0)}
-                disabled={!result1}
+                disabled={!hasResult}
                 className="text-[#adaaaa] hover:text-white disabled:opacity-50"
               >
                 <RotateCcw size={20} />
@@ -318,21 +404,21 @@ export default function SearchPlaygroundPage() {
                   setIsPlaying(false);
                   setCurrentStep((p) => Math.max(0, p - 1));
                 }}
-                disabled={!result1 || currentStep === 0}
+                disabled={!hasResult || currentStep === 0}
                 className="text-[#adaaaa] hover:text-white disabled:opacity-50"
               >
                 <SkipBack size={20} />
               </button>
               
               <button
-                onClick={result1 ? togglePlay : handleRun}
+                onClick={hasResult ? togglePlay : handleRun}
                 className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${
-                  !result1
+                  !hasResult
                     ? "bg-[#8eff71] text-[#0d6100] hover:scale-105 neon-glow-primary"
                     : "bg-[#262626] text-white hover:bg-[#2c2c2c] border border-white/10"
                 }`}
               >
-                {!result1 ? <Play size={24} className="ml-1" /> : isPlaying ? <Pause size={24} /> : <Play size={24} className="ml-1" />}
+                {!hasResult ? <Play size={24} className="ml-1" /> : isPlaying ? <Pause size={24} /> : <Play size={24} className="ml-1" />}
               </button>
 
               <button
@@ -340,7 +426,7 @@ export default function SearchPlaygroundPage() {
                   setIsPlaying(false);
                   setCurrentStep((p) => Math.min(maxSteps - 1, p + 1));
                 }}
-                disabled={!result1 || currentStep >= maxSteps - 1}
+                disabled={!hasResult || currentStep >= maxSteps - 1}
                 className="text-[#adaaaa] hover:text-white disabled:opacity-50"
               >
                 <SkipForward size={20} />
@@ -371,7 +457,7 @@ export default function SearchPlaygroundPage() {
                 min={0}
                 max={Math.max(0, maxSteps - 1)}
                 step={1}
-                disabled={!result1}
+                disabled={!hasResult}
                 className="flex-1"
               />
             </div>

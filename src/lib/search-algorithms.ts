@@ -466,3 +466,317 @@ function runAStar(grid: Grid, start: Point, goal: Point): SearchResult {
 
   return { steps, found: false, pathCost: 0, nodesExpanded };
 }
+
+/* ── NODE GRAPH ALGORITHMS ── */
+
+export interface GraphNode {
+  id: string;
+  x?: number;
+  y?: number;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  weight: number;
+}
+
+export interface GraphSearchStep {
+  frontier: string[];
+  explored: string[];
+  path: string[] | null;
+  current: string;
+  stats: { nodesExpanded: number; pathCost: number };
+  nodeData: Record<string, { g?: number; h?: number; f?: number }>;
+}
+
+export interface GraphSearchResult {
+  steps: GraphSearchStep[];
+  found: boolean;
+  pathCost: number;
+  nodesExpanded: number;
+}
+
+const getGraphNeighbors = (nodeId: string, edges: GraphEdge[]): { id: string; weight: number }[] => {
+  const neighbors: { id: string; weight: number }[] = [];
+  for (const edge of edges) {
+    if (edge.source === nodeId) neighbors.push({ id: edge.target, weight: edge.weight });
+    // If undirected: if (edge.target === nodeId) neighbors.push({ id: edge.source, weight: edge.weight });
+    // Let's assume undirected for the playground to match grid adjacency
+    if (edge.target === nodeId) neighbors.push({ id: edge.source, weight: edge.weight });
+  }
+  return neighbors;
+};
+
+const constructGraphPath = (cameFrom: Map<string, string>, current: string): string[] => {
+  const path = [current];
+  let curr = current;
+  while (cameFrom.has(curr)) {
+    const prev = cameFrom.get(curr)!;
+    path.unshift(prev);
+    curr = prev;
+  }
+  return path;
+};
+
+export function runGraphSearchAlgorithm(
+  nodes: GraphNode[],
+  edges: GraphEdge[],
+  start: string,
+  goal: string,
+  type: AlgorithmType
+): GraphSearchResult {
+  switch (type) {
+    case "BFS": return runGraphBFS(nodes, edges, start, goal);
+    case "DFS": return runGraphDFS(nodes, edges, start, goal);
+    case "UCS": return runGraphUCS(nodes, edges, start, goal);
+    case "BestFirst": return runGraphBestFirst(nodes, edges, start, goal);
+    case "A*": return runGraphAStar(nodes, edges, start, goal);
+    default: return runGraphBFS(nodes, edges, start, goal);
+  }
+}
+
+function runGraphBFS(nodes: GraphNode[], edges: GraphEdge[], start: string, goal: string): GraphSearchResult {
+  const steps: GraphSearchStep[] = [];
+  const frontier: string[] = [start];
+  const explored = new Set<string>();
+  const cameFrom = new Map<string, string>();
+  let nodesExpanded = 0;
+
+  explored.add(start);
+
+  while (frontier.length > 0) {
+    const current = frontier.shift()!;
+    nodesExpanded++;
+
+    steps.push({
+      frontier: [...frontier],
+      explored: Array.from(explored),
+      path: null,
+      current,
+      stats: { nodesExpanded, pathCost: 0 },
+      nodeData: {},
+    });
+
+    if (current === goal) {
+      const path = constructGraphPath(cameFrom, current);
+      steps.push({ ...steps[steps.length - 1], path, stats: { nodesExpanded, pathCost: path.length - 1 } });
+      return { steps, found: true, pathCost: path.length - 1, nodesExpanded };
+    }
+
+    const neighbors = getGraphNeighbors(current, edges);
+    for (const n of neighbors) {
+      if (!explored.has(n.id)) {
+        explored.add(n.id);
+        cameFrom.set(n.id, current);
+        frontier.push(n.id);
+      }
+    }
+  }
+  return { steps, found: false, pathCost: 0, nodesExpanded };
+}
+
+function runGraphDFS(nodes: GraphNode[], edges: GraphEdge[], start: string, goal: string): GraphSearchResult {
+  const steps: GraphSearchStep[] = [];
+  const frontier: string[] = [start];
+  const explored = new Set<string>();
+  const cameFrom = new Map<string, string>();
+  let nodesExpanded = 0;
+
+  while (frontier.length > 0) {
+    const current = frontier.pop()!;
+    if (explored.has(current)) continue;
+    explored.add(current);
+    nodesExpanded++;
+
+    steps.push({
+      frontier: [...frontier],
+      explored: Array.from(explored),
+      path: null,
+      current,
+      stats: { nodesExpanded, pathCost: 0 },
+      nodeData: {},
+    });
+
+    if (current === goal) {
+      const path = constructGraphPath(cameFrom, current);
+      steps.push({ ...steps[steps.length - 1], path, stats: { nodesExpanded, pathCost: path.length - 1 } });
+      return { steps, found: true, pathCost: path.length - 1, nodesExpanded };
+    }
+
+    const neighbors = getGraphNeighbors(current, edges);
+    for (let i = neighbors.length - 1; i >= 0; i--) {
+      const n = neighbors[i];
+      if (!explored.has(n.id)) {
+        cameFrom.set(n.id, current);
+        frontier.push(n.id);
+      }
+    }
+  }
+  return { steps, found: false, pathCost: 0, nodesExpanded };
+}
+
+function runGraphUCS(nodes: GraphNode[], edges: GraphEdge[], start: string, goal: string): GraphSearchResult {
+  const steps: GraphSearchStep[] = [];
+  const frontier = new PriorityQueue<string>();
+  const costSoFar = new Map<string, number>();
+  const cameFrom = new Map<string, string>();
+  const explored = new Set<string>();
+  let nodesExpanded = 0;
+  const nodeData: Record<string, { g?: number }> = {};
+
+  frontier.enqueue(start, 0);
+  costSoFar.set(start, 0);
+  nodeData[start] = { g: 0 };
+
+  while (!frontier.isEmpty()) {
+    const current = frontier.dequeue()!;
+    if (explored.has(current)) continue;
+    explored.add(current);
+    nodesExpanded++;
+
+    steps.push({
+      frontier: [],
+      explored: Array.from(explored),
+      path: null,
+      current,
+      stats: { nodesExpanded, pathCost: 0 },
+      nodeData: { ...nodeData },
+    });
+
+    if (current === goal) {
+      const path = constructGraphPath(cameFrom, current);
+      const totalCost = costSoFar.get(current)!;
+      steps.push({ ...steps[steps.length - 1], path, stats: { nodesExpanded, pathCost: totalCost } });
+      return { steps, found: true, pathCost: totalCost, nodesExpanded };
+    }
+
+    const neighbors = getGraphNeighbors(current, edges);
+    for (const n of neighbors) {
+      const newCost = costSoFar.get(current)! + n.weight;
+      if (!costSoFar.has(n.id) || newCost < costSoFar.get(n.id)!) {
+        costSoFar.set(n.id, newCost);
+        cameFrom.set(n.id, current);
+        nodeData[n.id] = { g: newCost };
+        frontier.enqueue(n.id, newCost);
+      }
+    }
+  }
+  return { steps, found: false, pathCost: 0, nodesExpanded };
+}
+
+function euclidean(n1: GraphNode, n2: GraphNode): number {
+  if (n1.x === undefined || n1.y === undefined || n2.x === undefined || n2.y === undefined) return 0;
+  return Math.sqrt(Math.pow(n1.x - n2.x, 2) + Math.pow(n1.y - n2.y, 2));
+}
+
+function runGraphBestFirst(nodes: GraphNode[], edges: GraphEdge[], start: string, goal: string): GraphSearchResult {
+  const steps: GraphSearchStep[] = [];
+  const frontier = new PriorityQueue<string>();
+  const cameFrom = new Map<string, string>();
+  const explored = new Set<string>();
+  const gCosts = new Map<string, number>();
+  let nodesExpanded = 0;
+  const nodeData: Record<string, { h?: number }> = {};
+
+  const goalNode = nodes.find(n => n.id === goal)!;
+  const startNode = nodes.find(n => n.id === start)!;
+  const hStart = Math.round(euclidean(startNode, goalNode));
+  
+  frontier.enqueue(start, hStart);
+  gCosts.set(start, 0);
+  nodeData[start] = { h: hStart };
+
+  while (!frontier.isEmpty()) {
+    const current = frontier.dequeue()!;
+    if (explored.has(current)) continue;
+    explored.add(current);
+    nodesExpanded++;
+
+    steps.push({
+      frontier: [],
+      explored: Array.from(explored),
+      path: null,
+      current,
+      stats: { nodesExpanded, pathCost: 0 },
+      nodeData: { ...nodeData },
+    });
+
+    if (current === goal) {
+      const path = constructGraphPath(cameFrom, current);
+      steps.push({ ...steps[steps.length - 1], path, stats: { nodesExpanded, pathCost: gCosts.get(current)! } });
+      return { steps, found: true, pathCost: gCosts.get(current)!, nodesExpanded };
+    }
+
+    const neighbors = getGraphNeighbors(current, edges);
+    for (const n of neighbors) {
+      if (!explored.has(n.id)) {
+        if (!cameFrom.has(n.id)) {
+          cameFrom.set(n.id, current);
+          gCosts.set(n.id, gCosts.get(current)! + n.weight);
+          const nNode = nodes.find(node => node.id === n.id)!;
+          const h = Math.round(euclidean(nNode, goalNode));
+          nodeData[n.id] = { h };
+          frontier.enqueue(n.id, h);
+        }
+      }
+    }
+  }
+  return { steps, found: false, pathCost: 0, nodesExpanded };
+}
+
+function runGraphAStar(nodes: GraphNode[], edges: GraphEdge[], start: string, goal: string): GraphSearchResult {
+  const steps: GraphSearchStep[] = [];
+  const frontier = new PriorityQueue<string>();
+  const costSoFar = new Map<string, number>();
+  const cameFrom = new Map<string, string>();
+  const explored = new Set<string>();
+  let nodesExpanded = 0;
+  const nodeData: Record<string, { g?: number; h?: number; f?: number }> = {};
+
+  const goalNode = nodes.find(n => n.id === goal)!;
+  const startNode = nodes.find(n => n.id === start)!;
+  const hStart = Math.round(euclidean(startNode, goalNode));
+
+  frontier.enqueue(start, hStart);
+  costSoFar.set(start, 0);
+  nodeData[start] = { g: 0, h: hStart, f: hStart };
+
+  while (!frontier.isEmpty()) {
+    const current = frontier.dequeue()!;
+    if (explored.has(current)) continue;
+    explored.add(current);
+    nodesExpanded++;
+
+    steps.push({
+      frontier: [],
+      explored: Array.from(explored),
+      path: null,
+      current,
+      stats: { nodesExpanded, pathCost: 0 },
+      nodeData: { ...nodeData },
+    });
+
+    if (current === goal) {
+      const path = constructGraphPath(cameFrom, current);
+      steps.push({ ...steps[steps.length - 1], path, stats: { nodesExpanded, pathCost: costSoFar.get(current)! } });
+      return { steps, found: true, pathCost: costSoFar.get(current)!, nodesExpanded };
+    }
+
+    const neighbors = getGraphNeighbors(current, edges);
+    for (const n of neighbors) {
+      const newCost = costSoFar.get(current)! + n.weight;
+      if (!costSoFar.has(n.id) || newCost < costSoFar.get(n.id)!) {
+        costSoFar.set(n.id, newCost);
+        cameFrom.set(n.id, current);
+        
+        const nNode = nodes.find(node => node.id === n.id)!;
+        const h = Math.round(euclidean(nNode, goalNode));
+        const f = newCost + h;
+        nodeData[n.id] = { g: newCost, h, f };
+        frontier.enqueue(n.id, f);
+      }
+    }
+  }
+  return { steps, found: false, pathCost: 0, nodesExpanded };
+}
