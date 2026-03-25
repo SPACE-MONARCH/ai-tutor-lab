@@ -66,6 +66,7 @@ const MODULES: LabModule[] = [
       "https://lh3.googleusercontent.com/aida-public/AB6AXuBRHxcfFE-PC8ibc3aUt7cynMQm8SluTY4_QQRbx9WHjOE4Hp-NvusiKEJUiXFqASzRbgojHQ5t33_hNqGvBED1EIwtKKUPMCbehDW86UkzMLk37Ttwt7ixgjMYiYOsej3h-gHQT-Kqzdbi1zI7VK-ba7dnGrHN6CpS9R8q3dVBLuwwyLrQhxi4JO_4XifhnIuIsacCRkYeM5N46zSSKK86eg6F0Vxuhz56S1EZpzFu-VLty6MuXe7GIZqNsnbOSCvn0U76BggW2w",
     status: "resume",
     xp: "",
+    href: "/dashboard/game",
   },
   {
     id: 4,
