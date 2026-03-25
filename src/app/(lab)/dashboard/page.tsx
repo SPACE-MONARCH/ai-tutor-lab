@@ -100,9 +100,9 @@ const MODULES: LabModule[] = [
       "Test your neural retention with evolving difficulty algorithms.",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuAhbGR2yq8V1pcGeSMj6gE8FW8-KaQ_xQJW9MXDctFjNCpZUQCmf88GvIrj8SGjPKB25Joh8ijA65L5Gt0oYyilauTzY55XEVjfsQYLh3nmpAF8pacIogsJ9icStN55MzhE5DQeakNBBQ_3vc_DiDzsr9oa1AjNS6JMo0g_2RdsOmqTbEl517GMKYmPrKVZmHwkoP1gYmuY-z5mChyb-QR0x7NyZ20V9MVOvs5Fz9LYqpcgO2o1faYH-0Yjdt2HPO_8EhyrL_dtyA",
-    status: "timed-lock",
-    xp: "",
-    lockMessage: "Next availability: 4h",
+    status: "in-progress",
+    xp: "0/3 XP",
+    href: "/dashboard/quiz",
   },
 ];
 
