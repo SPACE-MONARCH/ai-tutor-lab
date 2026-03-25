@@ -1,0 +1,11 @@
+feat: CSP Board dynamic + manual/instant modes
+
+• Genkit Gemini 2.0 Flash: Generate cryptarithmetic/maps (debug logs)
+• Tabs: 'Cryptarithmetic | Map Coloring' + Generate buttons
+• Manual Map: Click-color + real-time conflict glow (red edges)
+• Instant Solve: Final mapping overlay (green)
+• Error banners + fallback puzzles (API key missing)
+• Backtracking timeline preserved
+
+4/6 modules: dashboard -> search -> game -> csp
+Infinite CSP practice!

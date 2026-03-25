@@ -76,8 +76,9 @@ const MODULES: LabModule[] = [
       "Solve map coloring and Sudoku using constraint satisfaction heuristics.",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuDy4rqGux_JIMA-0WScpiPBhq4kz_4p-92pq-bmnG_LoU9RHFhvsSYU2-FpDotOW22Vjg04MidLi7beBZqIs7I0xC5xEvwCbfvmdcOe5WD0RyomBvmXU2gDfQaqX6I-dxJ60RR6DRJ3kgrv90dOh6gnreE5QzrSc3TjukkFohhaUPyQPrSGE9qcYck2dta9cWcmW-DT5uG47hOH51hP9YH6ObE2b_6Pk9vo8wNbPLrZ1CBrDOK7ASJN6g4_eedoXRjXAXAodemz9w",
-    status: "in-progress",
+    status: "resume",
     xp: "0/3 XP",
+    href: "/dashboard/csp",
   },
   {
     id: 5,
