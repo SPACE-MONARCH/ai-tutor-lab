@@ -7,6 +7,7 @@ import confetti from "canvas-confetti";
 
 import { Question, Difficulty, getInitialQuestions, getAdaptiveQuestion } from "@/lib/quiz-bank";
 import { getQuizExplanation } from "./actions";
+import { useLabProgress } from "@/lib/progress";
 
 // Optional Firebase auth - mock if fails
 import { initializeApp } from "firebase/app";
@@ -32,6 +33,7 @@ if (process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
 }
 
 export default function AdaptiveQuizPage() {
+  const { markQuizComplete } = useLabProgress();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   
@@ -113,6 +115,9 @@ export default function AdaptiveQuizPage() {
   const handleFinish = async (finalScore: number, finalStreak: number) => {
     setIsFinished(true);
     confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 }, zIndex: 100 });
+    
+    // Save globally to ring
+    markQuizComplete(finalScore);
     
     // Save Score
     if (auth && db) {

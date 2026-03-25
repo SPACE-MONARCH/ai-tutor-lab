@@ -39,9 +39,10 @@ const MODULES: LabModule[] = [
       "Learn to translate real-world challenges into state-space abstractions.",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuCUN8G6aE_RF8laM4v_JVlpNGQs90iiHflUAvatoZwEtS1BKnz1KTPnnQBFjpLa0Oy-8uZioBUM6ft-iuVommz8UL0qfacs0VAbmeeFonpDQRaz5LBGOdDJcK5aWFqXj3veJi7Sy199OwP27D5sUlhV6iF3e1EbohSuBeVcTEAReSmCIuHk7-SFzzRvaeUxXId0vzigScpT0PJOWkFEarV1KyIrHx8j4z0mdNNf8gf0Dgp9WYi6qMc5jQks3PiNzYWfGeiO9_UqPA",
-    status: "completed",
+    status: "in-progress",
     xp: "3/3 XP",
     scholars: "1.2k Scholars",
+    href: "/dashboard/problem",
   },
   {
     id: 2,
@@ -88,9 +89,9 @@ const MODULES: LabModule[] = [
       "Program simple reflex and goal-based agents for vacuum environments.",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuAnosqPnaLlzXw7ClDswiU2ZKs6O3H7QRey0O5n3pdWaJbiBB9fhXA9BUu4LKwg2rdvccH7qnu21v9KVRpq-dY7VwWOsQhF5eLKnYp-oJK2TyX_Wk_APTwOIWhp5MJAIEU12-Z2m4BsrFkSS0oFQw8QxuUbcfsVTh6cjzoSGF3dlYlrUd2MBuwMZl36KJhwHT1XTwCA-MJvVivrN1t6FMHASNF9BFzE8ERO_qnHDD9cVB3kQjjpRz5hhtBS1szx7v2MP5TN8g54sQ",
-    status: "locked",
-    xp: "",
-    lockMessage: "Locked (Reach Lvl 15)",
+    status: "in-progress",
+    xp: "0/3 XP",
+    href: "/dashboard/agent",
   },
   {
     id: 6,

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -21,7 +21,10 @@ import {
   Puzzle,
   UserCircle,
   Menu,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import { useLabProgress } from "@/lib/progress";
 
 /* ── Navigation data ── */
 type NavItem = { label: string; icon: any; href: string; active?: boolean };
@@ -42,9 +45,10 @@ const MOBILE_NAV = [
 ] as const;
 
 /* ── Mastery Ring SVG ── */
-function MasteryRing() {
+function MasteryRing({ percentage }: { percentage: number }) {
+  const dashoffset = 125.6 - (125.6 * percentage) / 100;
   return (
-    <div className="relative w-12 h-12">
+    <div className="relative w-12 h-12 flex-shrink-0">
       <svg className="w-full h-full transform -rotate-90" viewBox="0 0 48 48">
         <circle
           className="text-[#262626]"
@@ -55,7 +59,7 @@ function MasteryRing() {
           stroke="currentColor"
           strokeWidth="4"
         />
-        <circle
+        <motion.circle
           className="text-[#8eff71] drop-shadow-[0_0_5px_#2ff801]"
           cx="24"
           cy="24"
@@ -63,12 +67,15 @@ function MasteryRing() {
           fill="transparent"
           stroke="currentColor"
           strokeDasharray="125.6"
-          strokeDashoffset="62.8"
+          initial={{ strokeDashoffset: 125.6 }}
+          animate={{ strokeDashoffset: dashoffset }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
           strokeWidth="4"
+          strokeLinecap="round"
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white">
-        50%
+        {Math.round(percentage)}%
       </div>
     </div>
   );
@@ -161,6 +168,24 @@ export default function LabLayout({
 }) {
   const [chatOpen, setChatOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+  
+  const { progress, completedCount, completionPercentage, isLoaded } = useLabProgress();
+
+  useEffect(() => {
+    setIsMounted(true);
+    const stored = localStorage.getItem("sidebar-open");
+    if (stored !== null) {
+      setIsDesktopSidebarOpen(stored === "true");
+    }
+  }, []);
+
+  const toggleDesktopSidebar = () => {
+    const newState = !isDesktopSidebarOpen;
+    setIsDesktopSidebarOpen(newState);
+    localStorage.setItem("sidebar-open", String(newState));
+  };
 
   return (
     <div className="relative min-h-screen bg-[#0e0e0e] text-white font-[family-name:var(--font-body)] selection:bg-[#8eff71] selection:text-[#0d6100]">
@@ -175,9 +200,9 @@ export default function LabLayout({
             <Menu size={24} />
           </button>
 
-          <span className="text-2xl font-black text-[#39FF14] drop-shadow-[0_0_8px_rgba(57,255,20,0.6)] font-[family-name:var(--font-headline)] tracking-tight">
+          <Link href="/dashboard" className="text-2xl font-black text-[#39FF14] drop-shadow-[0_0_8px_rgba(57,255,20,0.6)] hover:drop-shadow-[0_0_15px_rgba(57,255,20,0.9)] hover:text-[#8eff71] transition-all font-[family-name:var(--font-headline)] tracking-tight">
             AI Lab
-          </span>
+          </Link>
 
           {/* Progress chip */}
           <div className="hidden md:flex items-center gap-4 bg-[#131313] px-4 py-1.5 rounded-full border border-white/5">
@@ -185,10 +210,13 @@ export default function LabLayout({
               Progress
             </span>
             <div className="w-48 h-2 bg-[#262626] rounded-full overflow-hidden">
-              <div className="w-1/2 h-full bg-[#2ff801] shadow-[0_0_10px_#2ff801]" />
+              <div 
+                 className="h-full bg-[#2ff801] shadow-[0_0_10px_#2ff801] transition-all duration-1000"
+                 style={{ width: `${isLoaded ? completionPercentage : 0}%` }}
+              />
             </div>
             <span className="text-xs font-mono text-[#8eff71]">
-              3/6 modules
+              {completedCount}/5 modules
             </span>
           </div>
         </div>
@@ -210,69 +238,110 @@ export default function LabLayout({
       </header>
 
       {/* ── Sidebar (Desktop) ── */}
-      <aside className="fixed left-0 top-0 h-full w-[280px] z-40 bg-[#1a1a1a] shadow-[10px_0_30px_rgba(0,0,0,0.5)] hidden md:flex flex-col pt-20 pb-6 px-4 space-y-2">
-        <div className="mb-6 px-2">
-          <h2 className="font-[family-name:var(--font-headline)] text-sm uppercase tracking-wider text-[#39FF14] font-bold">
-            AI Lab Explorer
-          </h2>
-          <p className="text-[10px] text-[#adaaaa] mt-1">
-            Level 14 – 2400 XP
-          </p>
+      <motion.aside
+        initial={false}
+        animate={{ width: isDesktopSidebarOpen ? 280 : 72 }}
+        className="fixed left-0 top-0 h-full z-40 bg-[#1a1a1a] shadow-[10px_0_30px_rgba(0,0,0,0.5)] hidden md:flex flex-col pt-20 pb-6 border-r border-white/5 whitespace-nowrap overflow-hidden"
+      >
+        <div className="mb-6 px-4 flex items-center justify-between h-8">
+          <AnimatePresence>
+            {isDesktopSidebarOpen && (
+              <motion.div 
+                initial={{ opacity: 0, width: 0 }} 
+                animate={{ opacity: 1, width: 'auto' }} 
+                exit={{ opacity: 0, width: 0 }}
+                className="overflow-hidden"
+              >
+                <h2 className="font-[family-name:var(--font-headline)] text-sm uppercase tracking-wider text-[#39FF14] font-bold">
+                  Explorer
+                </h2>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <button
+            onClick={toggleDesktopSidebar}
+            className={`flex items-center justify-center w-8 h-8 rounded-lg text-[#adaaaa] hover:text-[#39FF14] hover:bg-[#39FF14]/10 hover:shadow-[0_0_15px_rgba(57,255,20,0.2)] transition-all ${!isDesktopSidebarOpen ? 'mx-auto' : ''}`}
+          >
+            <motion.div animate={{ rotate: isDesktopSidebarOpen ? 0 : 180 }}>
+              <ChevronLeft size={20} />
+            </motion.div>
+          </button>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-hide">
+        <nav className="flex-1 space-y-2 overflow-y-auto scrollbar-hide px-3">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             return (
               <Link
                 key={item.label}
                 href={item.href}
-                className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
+                title={!isDesktopSidebarOpen ? item.label : undefined}
+                className={`flex items-center p-3 rounded-xl transition-all duration-200 group ${
                   item.active
-                    ? "bg-[#39FF14]/10 text-[#39FF14] border-l-4 border-[#39FF14] font-bold translate-x-1"
+                    ? "bg-[#39FF14]/10 text-[#39FF14] border-l-4 border-[#39FF14] font-bold"
                     : "text-gray-500 hover:text-gray-300 hover:bg-white/5 hover:shadow-[0_0_15px_rgba(57,255,20,0.1)]"
-                }`}
+                } ${isDesktopSidebarOpen ? "gap-4" : "justify-center"}`}
               >
-                <Icon size={20} />
-                <span className="font-[family-name:var(--font-headline)] text-sm uppercase tracking-wider">
-                  {item.label}
-                </span>
+                <div className={`${item.active ? "drop-shadow-[0_0_8px_rgba(57,255,20,0.8)]" : ""}`}>
+                  <Icon size={22} className={!isDesktopSidebarOpen && item.active ? "scale-110" : "group-hover:scale-110 transition-transform"} />
+                </div>
+                <AnimatePresence>
+                  {isDesktopSidebarOpen && (
+                    <motion.span
+                      initial={{ opacity: 0, width: 0 }}
+                      animate={{ opacity: 1, width: 'auto' }}
+                      exit={{ opacity: 0, width: 0 }}
+                      className="font-[family-name:var(--font-headline)] text-sm uppercase tracking-wider overflow-hidden"
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </Link>
             );
           })}
         </nav>
 
         {/* Bottom section */}
-        <div className="mt-auto space-y-4 pt-4 border-t border-white/5">
-          <div className="flex items-center gap-4 px-2">
-            <MasteryRing />
-            <div>
-              <p className="text-xs font-bold text-white">
-                Overall Lab Mastery
-              </p>
-              <button className="text-[10px] text-[#8eff71] uppercase tracking-tighter hover:underline">
-                View Lab Progress
-              </button>
-            </div>
-          </div>
-          <div className="flex flex-col gap-1">
-            <Link
-              href="#"
-              className="flex items-center gap-3 p-2 rounded-lg text-gray-500 hover:text-gray-300 transition-all text-xs uppercase tracking-widest"
+        <AnimatePresence>
+          {isDesktopSidebarOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-auto space-y-4 pt-4 border-t border-white/5 px-3 overflow-hidden"
             >
-              <Settings size={16} />
-              <span>Settings</span>
-            </Link>
-            <Link
-              href="#"
-              className="flex items-center gap-3 p-2 rounded-lg text-gray-500 hover:text-gray-300 transition-all text-xs uppercase tracking-widest"
-            >
-              <LifeBuoy size={16} />
-              <span>Support</span>
-            </Link>
-          </div>
-        </div>
-      </aside>
+              <div className="flex items-center gap-4 px-2">
+                <MasteryRing percentage={isLoaded ? completionPercentage : 0} />
+                <div className="overflow-hidden">
+                  <p className="text-xs font-bold text-white whitespace-nowrap">
+                    {completedCount}/5 Modules ({Math.round(completionPercentage)}%)
+                  </p>
+                  <p className="text-[10px] text-[#8eff71] uppercase tracking-widest mt-1">
+                    XP: {progress.xp} pts
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <Link
+                  href="#"
+                  className="flex items-center gap-3 p-2 rounded-lg text-gray-500 hover:text-gray-300 transition-all text-xs uppercase tracking-widest"
+                >
+                  <Settings size={16} />
+                  <span>Settings</span>
+                </Link>
+                <Link
+                  href="#"
+                  className="flex items-center gap-3 p-2 rounded-lg text-gray-500 hover:text-gray-300 transition-all text-xs uppercase tracking-widest"
+                >
+                  <LifeBuoy size={16} />
+                  <span>Support</span>
+                </Link>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.aside>
 
       {/* ── Mobile sidebar overlay ── */}
       <AnimatePresence>
@@ -328,7 +397,10 @@ export default function LabLayout({
       </AnimatePresence>
 
       {/* ── Main Content ── */}
-      <main className="md:ml-[280px] pt-24 pb-20 px-6 md:px-10 min-h-screen">
+      <main 
+        className="pt-24 pb-20 px-6 md:px-10 min-h-screen transition-all duration-300"
+        style={{ marginLeft: isMounted && typeof window !== 'undefined' && window.innerWidth >= 768 ? (isDesktopSidebarOpen ? 280 : 72) : 0 }}
+      >
         {children}
       </main>
 
