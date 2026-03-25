@@ -1,11 +1,11 @@
-feat: CSP Board dynamic + manual/instant modes
+feat: Agent Designer complete (Module 5/6 – Intelligent Agents)
 
-• Genkit Gemini 2.0 Flash: Generate cryptarithmetic/maps (debug logs)
-• Tabs: 'Cryptarithmetic | Map Coloring' + Generate buttons
-• Manual Map: Click-color + real-time conflict glow (red edges)
-• Instant Solve: Final mapping overlay (green)
-• Error banners + fallback puzzles (API key missing)
-• Backtracking timeline preserved
+• Dual 5x5 vacuum world grids with random dirt/walls
+• 4 agent types: Simple Reflex, Model-Based, Goal-Based (BFS pathing), Utility-Based (score optimization)
+• Side-by-side simulation (100 ticks max, neon agent trails)
+• Live stats: Cleans/steps/utility score + winner badge
+• 'New World' generator for replayability
+• Fixed: TypeScript/layout errors, shadcn toggle-group, clean Next.js build
 
-4/6 modules: dashboard -> search -> game -> csp
-Infinite CSP practice!
+5/6 modules done: dashboard -> search -> game -> csp -> agent
+Unit 3 complete!

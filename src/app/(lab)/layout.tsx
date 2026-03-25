@@ -24,14 +24,15 @@ import {
 } from "lucide-react";
 
 /* ── Navigation data ── */
-const NAV_ITEMS = [
+type NavItem = { label: string; icon: any; href: string; active?: boolean };
+const NAV_ITEMS: NavItem[] = [
   { label: "Problem Formulator", icon: Brain, href: "#", active: true },
   { label: "Search Playground", icon: Search, href: "#" },
   { label: "Game Tree Studio", icon: GitBranch, href: "#" },
   { label: "CSP Board", icon: LayoutGrid, href: "#" },
   { label: "Agent Designer", icon: Bot, href: "#" },
   { label: "Adaptive Quiz", icon: HelpCircle, href: "#" },
-] as const;
+];
 
 const MOBILE_NAV = [
   { label: "Lab", icon: FlaskConical, href: "/dashboard" },
