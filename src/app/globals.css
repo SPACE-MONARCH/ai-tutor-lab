@@ -7,9 +7,36 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-body);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-headline);
+
+  /* Neon surface hierarchy */
+  --color-neon-surface: #0e0e0e;
+  --color-neon-surface-container-lowest: #000000;
+  --color-neon-surface-container-low: #131313;
+  --color-neon-surface-container: #1a1a1a;
+  --color-neon-surface-container-high: #20201f;
+  --color-neon-surface-container-highest: #262626;
+  --color-neon-surface-bright: #2c2c2c;
+
+  /* Neon accent palette */
+  --color-neon-primary: #8eff71;
+  --color-neon-primary-container: #2ff801;
+  --color-neon-primary-dim: #2be800;
+  --color-neon-on-primary: #0d6100;
+  --color-neon-secondary: #d873ff;
+  --color-neon-secondary-container: #9900ce;
+  --color-neon-on-secondary-container: #fff5fc;
+  --color-neon-tertiary: #81ecff;
+  --color-neon-tertiary-dim: #00d4ec;
+  --color-neon-on-surface: #ffffff;
+  --color-neon-on-surface-variant: #adaaaa;
+  --color-neon-outline: #767575;
+  --color-neon-outline-variant: #484847;
+  --color-neon-error: #ff7351;
+
+  /* Sidebar */
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -18,11 +45,15 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+
+  /* Charts */
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+
+  /* Core tokens */
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -39,6 +70,8 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  /* Radii */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -84,37 +117,37 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #0e0e0e;
+  --foreground: #ffffff;
+  --card: #1a1a1a;
+  --card-foreground: #ffffff;
+  --popover: #1a1a1a;
+  --popover-foreground: #ffffff;
+  --primary: #8eff71;
+  --primary-foreground: #0d6100;
+  --secondary: #9900ce;
+  --secondary-foreground: #fff5fc;
+  --muted: #262626;
+  --muted-foreground: #adaaaa;
+  --accent: #262626;
+  --accent-foreground: #ffffff;
+  --destructive: #ff7351;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #8eff71;
+  --chart-1: #8eff71;
+  --chart-2: #d873ff;
+  --chart-3: #81ecff;
+  --chart-4: #2ff801;
+  --chart-5: #00d4ec;
+  --sidebar: #1a1a1a;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #8eff71;
+  --sidebar-primary-foreground: #0d6100;
+  --sidebar-accent: #262626;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #8eff71;
 }
 
 @layer base {
@@ -127,4 +160,40 @@
   html {
     @apply font-sans;
   }
+}
+
+/* ── Neon Utility Classes ── */
+
+.glass-panel {
+  background: rgba(26, 26, 26, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.neon-glow-primary {
+  box-shadow: 0 0 15px rgba(142, 255, 113, 0.2);
+}
+
+.neon-glow-secondary {
+  box-shadow: 0 0 20px rgba(153, 0, 206, 0.3);
+}
+
+.neon-glow-tertiary {
+  box-shadow: 0 0 15px rgba(0, 212, 236, 0.2);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Neon text shadow helper */
+.neon-text-primary {
+  text-shadow: 0 0 10px rgba(142, 255, 113, 0.4);
+}
+.neon-text-secondary {
+  text-shadow: 0 0 10px rgba(216, 115, 255, 0.4);
 }
