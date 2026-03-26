@@ -9,14 +9,19 @@ export function useAuth() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth) {
+      setIsLoading(false);
+      return;
+    }
+
     // Listen to Auth State
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth!, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
         setIsLoading(false);
       } else {
         // Sign in anonymously on first visit
-        signInAnonymously(auth).catch((error) => {
+        signInAnonymously(auth!).catch((error) => {
           console.error("Anonymous auth failed (Check Firebase config/rules):", error);
           setIsLoading(false);
         });

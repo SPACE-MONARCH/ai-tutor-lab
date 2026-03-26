@@ -62,7 +62,8 @@ export default function CSPBoardPage() {
   const [cryptoPuz, setCryptoPuz] = useState<CryptoPuzzle>(DEFAULT_CRYPTO);
   const [mapPuz, setMapPuz] = useState<MapColoringPuzzle>(DEFAULT_MAP);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [genError, setGenError] = useState<string | null>(null);
+  const [genStatus, setGenStatus] = useState<{ text: string; type: "error" | "success" | "fallback" } | null>(null);
+  const [lastGenTime, setLastGenTime] = useState(0);
 
   // Results & Playback
   const [result, setResult] = useState<CSPResult | null>(null);
@@ -174,10 +175,14 @@ export default function CSPBoardPage() {
   }, [activeTab, useMRV, useForwardChecking, cryptoPuz, mapPuz]);
 
   const handleGenerate = async () => {
+    const now = Date.now();
+    if (now - lastGenTime < 1000) return;
+    setLastGenTime(now);
+
     setIsPlaying(false);
     setResult(null);
     setCurrentStep(0);
-    setGenError(null);
+    setGenStatus(null);
     setManualMode(false);
     setManualAssignments({});
     setShowInstantSolve(false);
@@ -187,14 +192,16 @@ export default function CSPBoardPage() {
       if (activeTab === "cryptarithmetic") {
         const res = await generateCryptarithmetic();
         if (res.data) setCryptoPuz(res.data);
-        if (res.error) setGenError(res.error);
+        if (res.fromFallback) setGenStatus({ text: "Using fallback pool...", type: "fallback" });
+        else if (res.data) setGenStatus({ text: `New puzzle: ${res.data.word1}+${res.data.word2}=${res.data.result}`, type: "success" });
       } else {
         const res = await generateMapColoring();
         if (res.data) setMapPuz(res.data);
-        if (res.error) setGenError(res.error);
+        if (res.fromFallback) setGenStatus({ text: "Using fallback pool...", type: "fallback" });
+        else if (res.data) setGenStatus({ text: `New puzzle: Map with ${res.data.regions.length} regions`, type: "success" });
       }
     } catch (err: any) {
-      setGenError("Unexpected error: " + (err?.message || "Unknown"));
+      setGenStatus({ text: "Unexpected error: " + (err?.message || "Unknown"), type: "error" });
     } finally {
       setIsGenerating(false);
     }
@@ -204,7 +211,7 @@ export default function CSPBoardPage() {
     setIsPlaying(false);
     setResult(null);
     setCurrentStep(0);
-    setGenError(null);
+    setGenStatus(null);
     setManualMode(false);
     setManualAssignments({});
     setShowInstantSolve(false);
@@ -248,7 +255,7 @@ export default function CSPBoardPage() {
     setCurrentStep(0);
     setManualMode(false);
     setManualAssignments({});
-    setGenError(null);
+    setGenStatus(null);
     setShowInstantSolve(false);
   }, [activeTab]);
 
@@ -264,7 +271,7 @@ export default function CSPBoardPage() {
         {isGenerating ? (
           <div className="text-[#81ecff] flex flex-col items-center">
             <Loader2 className="animate-spin mb-2" size={32} />
-            <span className="font-mono text-xs uppercase tracking-widest">Generating Map...</span>
+            <span className="font-mono text-xs uppercase tracking-widest">Generating via Gemini...</span>
           </div>
         ) : (
           <svg viewBox="0 0 500 500" className="w-full h-full max-w-[500px] max-h-[500px]">
@@ -434,7 +441,7 @@ export default function CSPBoardPage() {
         {isGenerating ? (
           <div className="text-[#81ecff] flex flex-col items-center">
             <Loader2 className="animate-spin mb-2" size={32} />
-            <span className="font-mono text-xs uppercase tracking-widest">Conjuring Puzzle...</span>
+            <span className="font-mono text-xs uppercase tracking-widest">Generating via Gemini...</span>
           </div>
         ) : (
           <div className="flex flex-col items-end gap-4 space-y-4 font-mono select-none">
@@ -512,21 +519,31 @@ export default function CSPBoardPage() {
         )}
       </div>
 
-      {/* Error Banner */}
+      {/* Status Banner */}
       <AnimatePresence>
-        {genError && (
+        {genStatus && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-[#ff3366]/10 border border-[#ff3366]/30 rounded-xl px-4 py-3 flex items-start gap-3"
+            className={`border rounded-xl px-4 py-3 flex items-start gap-3 ${
+              genStatus.type === "error" ? "bg-[#ff3366]/10 border-[#ff3366]/30 text-[#ff3366]"
+              : genStatus.type === "fallback" ? "bg-[#ffcc00]/10 border-[#ffcc00]/30 text-[#ffcc00]"
+              : "bg-[#8eff71]/10 border-[#8eff71]/30 text-[#8eff71]"
+            }`}
           >
-            <AlertTriangle size={18} className="text-[#ff3366] shrink-0 mt-0.5" />
+            {genStatus.type === "error" ? <AlertTriangle size={18} className="shrink-0 mt-0.5" />
+             : genStatus.type === "fallback" ? <AlertTriangle size={18} className="shrink-0 mt-0.5" />
+             : <CheckCircle2 size={18} className="shrink-0 mt-0.5" />}
             <div className="flex-1">
-              <p className="text-[#ff3366] text-xs font-bold uppercase tracking-widest mb-1">Generation Warning</p>
-              <p className="text-[#adaaaa] text-xs">{genError}</p>
+              <p className="text-xs font-bold uppercase tracking-widest border-b border-current/10 pb-1 mb-1">
+                {genStatus.type === "error" ? "Generation Error" : genStatus.type === "fallback" ? "Network Status" : "Genkit Success"}
+              </p>
+              <p className={`text-xs ${genStatus.type === "error" ? "text-white/80" : "text-current"}`}>
+                {genStatus.text}
+              </p>
             </div>
-            <button onClick={() => setGenError(null)} className="text-[#adaaaa] hover:text-white">
+            <button onClick={() => setGenStatus(null)} className="opacity-50 hover:opacity-100">
               <X size={14} />
             </button>
           </motion.div>
