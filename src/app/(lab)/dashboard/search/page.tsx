@@ -14,6 +14,9 @@ import {
   Hammer,
   SplitSquareHorizontal,
   Route,
+  Sparkles,
+  Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -44,6 +47,7 @@ import {
 } from "@/lib/search-algorithms";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { NodeGraphViz } from "@/components/search/NodeGraphViz";
+import { generateRandomGraph } from "@/ai/flows/generate-graph.genkit";
 
 const GRID_SIZE = 8;
 type Tool = "start" | "goal" | "wall" | "empty" | "weight";
@@ -112,6 +116,12 @@ export default function SearchPlaygroundPage() {
 
   const hasResult = mode === "grid" ? !!result1 : !!graphResult1;
 
+  // --- Generation States ---
+  const [isGeneratingGraph, setIsGeneratingGraph] = useState(false);
+  const [genGraphError, setGenGraphError] = useState<string | null>(null);
+  const [genGraphFallback, setGenGraphFallback] = useState(false);
+  const lastGenerationTime = useRef<number>(0);
+
   // --- Handlers ---
   const handleCellClick = (x: number, y: number) => {
     if (isPlaying) return;
@@ -147,6 +157,36 @@ export default function SearchPlaygroundPage() {
       }
     }
     setGrid(newGrid);
+  };
+
+  const handleGenerateGraph = async () => {
+    const now = Date.now();
+    if (now - lastGenerationTime.current < 1500) return; // 1.5s throttle
+    lastGenerationTime.current = now;
+
+    setIsGeneratingGraph(true);
+    setGenGraphError(null);
+    setGenGraphFallback(false);
+
+    try {
+      const res = await generateRandomGraph();
+      if (res.data) {
+        setGraphNodes(res.data.nodes);
+        setGraphEdges(res.data.edges);
+        setGraphStart(res.data.startNode);
+        setGraphGoal(res.data.goalNode);
+        setGenGraphFallback(res.fromFallback);
+        // Clear old results
+        setGraphResult1(null);
+        setGraphResult2(null);
+        setCurrentStep(0);
+      }
+      if (res.error) setGenGraphError(res.error);
+    } catch (err) {
+      setGenGraphError("Failed to fetch graph stream.");
+    } finally {
+      setIsGeneratingGraph(false);
+    }
   };
 
   const handleRun = () => {
@@ -328,6 +368,16 @@ export default function SearchPlaygroundPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {mode === "graph" && (
+            <button
+               onClick={handleGenerateGraph}
+               disabled={isGeneratingGraph}
+               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-[#39FF14]/10 border border-[#39FF14]/30 text-[#39FF14] hover:bg-[#39FF14]/20 transition-all disabled:opacity-50 uppercase tracking-widest text-xs"
+            >
+               {isGeneratingGraph ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+               Generate AI Graph
+            </button>
+          )}
           <button
             onClick={() => setIsCompareMode(!isCompareMode)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border transition-all ${
@@ -341,6 +391,16 @@ export default function SearchPlaygroundPage() {
           </button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {mode === "graph" && (isGeneratingGraph || genGraphError || genGraphFallback) && (
+           <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="flex gap-2">
+              {isGeneratingGraph && <div className="bg-[#131313] text-[#adaaaa] border border-white/10 px-3 py-1 rounded-md text-xs flex items-center gap-2 font-mono"><Loader2 size={12} className="animate-spin" /> Querying Gemini for new topology...</div>}
+              {genGraphFallback && !isGeneratingGraph && <div className="bg-[#ffcc00]/20 text-[#ffcc00] border border-[#ffcc00]/40 px-3 py-1 rounded-md text-xs flex items-center gap-2 font-mono"><AlertTriangle size={12} /> Rate limit/Error. Fallback tree loaded.</div>}
+              {genGraphError && !genGraphFallback && !isGeneratingGraph && <div className="bg-[#ff3366]/20 text-[#ff3366] border border-[#ff3366]/40 px-3 py-1 rounded-md text-xs flex items-center gap-2 font-mono"><AlertTriangle size={12} /> {genGraphError}</div>}
+           </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* ── Visualizer Area ── */}
