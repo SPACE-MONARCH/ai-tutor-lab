@@ -1,5 +1,3 @@
-"use server";
-
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
 export interface GraphNode {
@@ -80,10 +78,14 @@ function randomFallback<T>(arr: T[]): T {
 const MAX_RETRIES = 3;
 
 export async function generateRandomGraph(): Promise<GenerationResult<GraphTopology>> {
-  const apiKey = process.env.GEMINI_API_KEY || "";
+  if (typeof window === "undefined") {
+    return { data: randomFallback(FALLBACK_TOPOLOGIES), error: "SSG compile-time bypass wrapper", fromFallback: true };
+  }
+
+  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "";
   if (!apiKey) {
-    console.warn("[Graph-Genkit] No GEMINI_API_KEY found in env. Using fallback graph.");
-    return { data: randomFallback(FALLBACK_TOPOLOGIES), error: "API key missing. Add GEMINI_API_KEY to .env.local (get one at ai.google.dev).", fromFallback: true };
+    console.warn("[Graph-Genkit] No NEXT_PUBLIC_GEMINI_API_KEY found in env. Using fallback graph.");
+    return { data: randomFallback(FALLBACK_TOPOLOGIES), error: "API key missing. Add NEXT_PUBLIC_GEMINI_API_KEY to .env.local (get one at ai.google.dev).", fromFallback: true };
   }
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {

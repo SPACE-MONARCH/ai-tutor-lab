@@ -1,5 +1,3 @@
-"use server";
-
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
 // Ensure keys are read dynamically in server actions
@@ -47,10 +45,14 @@ function randomFallback<T>(arr: T[]): T {
 const MAX_RETRIES = 3;
 
 export async function generateCryptarithmetic(): Promise<GenerationResult<CryptoPuzzle>> {
-  const apiKey = process.env.GEMINI_API_KEY || "";
+  if (typeof window === "undefined") {
+    return { data: randomFallback(CRYPTO_FALLBACKS), error: "SSG compile-time bypass wrapper", fromFallback: true };
+  }
+
+  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "";
   if (!apiKey) {
-    console.warn("[CSP-Genkit] No GEMINI_API_KEY found in env. Using fallback puzzle.");
-    return { data: randomFallback(CRYPTO_FALLBACKS), error: "API key missing. Add GEMINI_API_KEY to .env.local (get one at ai.google.dev).", fromFallback: true };
+    console.warn("[CSP-Genkit] No NEXT_PUBLIC_GEMINI_API_KEY found in env. Using fallback puzzle.");
+    return { data: randomFallback(CRYPTO_FALLBACKS), error: "API key missing. Add NEXT_PUBLIC_GEMINI_API_KEY to .env.local (get one at ai.google.dev).", fromFallback: true };
   }
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
@@ -109,10 +111,14 @@ Return JSON with fields: word1, word2, result.`;
 }
 
 export async function generateMapColoring(): Promise<GenerationResult<MapColoringPuzzle>> {
-  const apiKey = process.env.GEMINI_API_KEY || "";
+  if (typeof window === "undefined") {
+    return { data: randomFallback(MAP_FALLBACKS), error: "SSG compile-time bypass wrapper", fromFallback: true };
+  }
+
+  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "";
   if (!apiKey) {
-    console.warn("[CSP-Genkit] No GEMINI_API_KEY found in env. Using fallback map.");
-    return { data: randomFallback(MAP_FALLBACKS), error: "API key missing. Add GEMINI_API_KEY to .env.local (get one at ai.google.dev).", fromFallback: true };
+    console.warn("[CSP-Genkit] No NEXT_PUBLIC_GEMINI_API_KEY found in env. Using fallback map.");
+    return { data: randomFallback(MAP_FALLBACKS), error: "API key missing. Add NEXT_PUBLIC_GEMINI_API_KEY to .env.local (get one at ai.google.dev).", fromFallback: true };
   }
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {

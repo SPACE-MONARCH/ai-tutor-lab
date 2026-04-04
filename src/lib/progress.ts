@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
-import { db } from "@/lib/firebase/config";
-import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export type ModuleProgress = {
   problem: number;
@@ -67,8 +65,13 @@ export function useLabProgress() {
   // Sync to Cloud When User Auth Loads
   useEffect(() => {
     async function syncCloud() {
-      if (!user || !db) return;
+      if (!user) return;
       try {
+        const { initFirebase } = await import("@/lib/firebase/config");
+        const { db } = await initFirebase();
+        if (!db) return;
+        
+        const { doc, getDoc, setDoc } = await import("firebase/firestore");
         const docRef = doc(db, "users", user.uid, "progress");
         const docSnap = await getDoc(docRef);
         
@@ -94,9 +97,14 @@ export function useLabProgress() {
     localStorage.setItem("lab-progress", JSON.stringify(newProgress));
     window.dispatchEvent(new CustomEvent("lab-progress-updated", { detail: newProgress }));
     
-    if (user && db) {
+    if (user) {
       try {
-        await setDoc(doc(db, "users", user.uid, "progress"), { data: newProgress }, { merge: true });
+        const { initFirebase } = await import("@/lib/firebase/config");
+        const { db } = await initFirebase();
+        if (db) {
+           const { doc, setDoc } = await import("firebase/firestore");
+           await setDoc(doc(db, "users", user.uid, "progress"), { data: newProgress }, { merge: true });
+        }
       } catch (err) {
         console.warn("Cloud save failed.", err);
       }

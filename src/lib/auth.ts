@@ -1,34 +1,51 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { auth, signInAnonymously } from "./firebase/config";
-import { onAuthStateChanged, User } from "firebase/auth";
+import type { User } from "firebase/auth";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!auth) {
-      setIsLoading(false);
-      return;
-    }
+    let unsubscribe: () => void;
 
-    // Listen to Auth State
-    const unsubscribe = onAuthStateChanged(auth!, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        setIsLoading(false);
-      } else {
-        // Sign in anonymously on first visit
-        signInAnonymously(auth!).catch((error) => {
-          console.error("Anonymous auth failed (Check Firebase config/rules):", error);
+    const setupAuth = async () => {
+      try {
+        const { initFirebase, signInAnonymouslyAsync } = await import("./firebase/config");
+        const { onAuthStateChanged } = await import("firebase/auth");
+        const { auth } = await initFirebase();
+
+        if (!auth) {
           setIsLoading(false);
-        });
-      }
-    });
+          return;
+        }
 
-    return () => unsubscribe();
+        // Listen to Auth State
+        unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+          if (currentUser) {
+            setUser(currentUser);
+            setIsLoading(false);
+          } else {
+            // Sign in anonymously on first visit
+            signInAnonymouslyAsync().then((cred) => {
+              if (!cred) setIsLoading(false);
+            }).catch((error) => {
+              console.error("Anonymous auth failed (Check Firebase config/rules):", error);
+              setIsLoading(false);
+            });
+          }
+        });
+      } catch (err) {
+        setIsLoading(false);
+      }
+    };
+
+    setupAuth();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   return { user, isLoading };
