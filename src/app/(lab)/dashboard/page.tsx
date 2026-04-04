@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { useRouter } from "next/navigation";
+import { useLabProgress } from "@/lib/progress";
 
 /* ── Module data ── */
 interface LabModule {
@@ -198,6 +199,7 @@ function CardFooter({ mod }: { mod: LabModule }) {
 /* ── Dashboard Page ── */
 export default function DashboardPage() {
   const router = useRouter();
+  const { progress } = useLabProgress();
 
   return (
     <>
@@ -265,8 +267,26 @@ export default function DashboardPage() {
         animate="show"
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
       >
-        {MODULES.map((mod) => {
-          const Icon = mod.icon;
+        {MODULES.map((baseMod) => {
+          const Icon = baseMod.icon;
+          let calculatedStatus = baseMod.status;
+          let calculatedProgress = baseMod.progress;
+
+          if (progress && progress.modules) {
+            const val =
+              baseMod.id === 1 ? progress.modules.problem :
+              baseMod.id === 2 ? progress.modules.search :
+              baseMod.id === 3 ? progress.modules.game :
+              baseMod.id === 4 ? progress.modules.csp :
+              baseMod.id === 5 ? progress.modules.agent :
+              baseMod.id === 6 ? progress.modules.quiz : 0;
+            
+            calculatedProgress = val;
+            calculatedStatus = val === 1 ? "completed" : "in-progress";
+          }
+          
+          const mod = { ...baseMod, progress: calculatedProgress, status: calculatedStatus };
+
           return (
             <motion.div
               key={mod.id}

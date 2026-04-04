@@ -6,20 +6,12 @@
 - Environments: .env.local
 
   Creating an optimized production build ...
-✓ Compiled successfully in 9.6s
+✓ Compiled successfully in 12.7s
   Running TypeScript ...
-  Finished TypeScript in 4.5s ...
+  Finished TypeScript in 4.9s ...
   Collecting page data using 11 workers ...
   Generating static pages using 11 workers (0/11) ...
 Firebase initialization failed (expected during build without envs): Error [FirebaseError]: Firebase: Error (auth/invalid-api-key).
-    at bv (D:\ai-tutor-lab\.next\server\chunks\ssr\_0a0h33l._.js:3:322247)
-    at bw (D:\ai-tutor-lab\.next\server\chunks\ssr\_0a0h33l._.js:3:322296)
-    at ae.instanceFactory (D:\ai-tutor-lab\.next\server\chunks\ssr\_0a0h33l._.js:3:371793)
-    at ag.getOrInitializeService (D:\ai-tutor-lab\.next\server\chunks\ssr\_0a0h33l._.js:3:306450)
-    at ag.initialize (D:\ai-tutor-lab\.next\server\chunks\ssr\_0a0h33l._.js:3:305858)
-    at cF (D:\ai-tutor-lab\.next\server\chunks\ssr\_0a0h33l._.js:3:359700)
-    at di (D:\ai-tutor-lab\.next\server\chunks\ssr\_0a0h33l._.js:3:372431)
-    at module evaluation (D:\ai-tutor-lab\.next\server\chunks\ssr\_0a0h33l._.js:12:64074)
     at instantiateModule (D:\ai-tutor-lab\.next\server\chunks\ssr\[turbopack]_runtime.js:853:9)
     at getOrInstantiateModuleFromParent (D:\ai-tutor-lab\.next\server\chunks\ssr\[turbopack]_runtime.js:877:12) {
   code: 'auth/invalid-api-key',
@@ -28,7 +20,7 @@ Firebase initialization failed (expected during build without envs): Error [Fire
   Generating static pages using 11 workers (2/11) 
   Generating static pages using 11 workers (5/11) 
   Generating static pages using 11 workers (8/11) 
-✓ Generating static pages using 11 workers (11/11) in 519ms
+✓ Generating static pages using 11 workers (11/11) in 570ms
   Finalizing page optimization ...
 
 Route (app)

@@ -6,6 +6,7 @@ import { db } from "@/lib/firebase/config";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export type ModuleProgress = {
+  problem: number;
   search: number;
   game: number;
   csp: number;
@@ -20,6 +21,7 @@ export type LabProgress = {
 
 const DEFAULT_PROGRESS: LabProgress = {
   modules: {
+    problem: 0,  // 0%
     search: 1,   // 100% completed
     game: 0.8,   // 80%
     csp: 1,      // 100%
@@ -109,9 +111,18 @@ export function useLabProgress() {
     saveProgress(updated);
   };
 
-  const completedCount = Object.values(progress.modules).filter(v => v === 1).length;
-  // Exclude module 1, total is 5
-  const completionPercentage = (completedCount / 5) * 100;
+  const markProblemComplete = (score: number = 250) => {
+    if (progress.modules.problem === 1) return; // Already completed
+    const updated: LabProgress = {
+      modules: { ...progress.modules, problem: 1 },
+      xp: progress.xp + score
+    };
+    saveProgress(updated);
+  };
 
-  return { progress, completedCount, completionPercentage, isLoaded, markQuizComplete };
+  const completedCount = Object.values(progress.modules).filter(v => v === 1).length;
+  // Total is 6 modules
+  const completionPercentage = (completedCount / 6) * 100;
+
+  return { progress, completedCount, completionPercentage, isLoaded, markQuizComplete, markProblemComplete };
 }
