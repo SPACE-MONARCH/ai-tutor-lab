@@ -246,6 +246,24 @@ export default function DashboardPage() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              const nextModule = MODULES.find(m => {
+                 let s = m.status;
+                 if (progress?.modules) {
+                    const id = m.id;
+                    const val = id === 1 ? progress.modules.problem :
+                                id === 2 ? progress.modules.search :
+                                id === 3 ? progress.modules.game :
+                                id === 4 ? progress.modules.csp :
+                                id === 5 ? progress.modules.agent :
+                                id === 6 ? progress.modules.quiz : 0;
+                    s = val === 1 ? "completed" : "in-progress";
+                 }
+                 return s !== "completed";
+              });
+              router.push(nextModule?.href || "/dashboard/quiz");
+              console.log("Click CTA Start Learning");
+            }}
             className="group relative px-8 py-4 bg-[#8eff71] text-[#0d6100] font-bold rounded-xl overflow-hidden transition-all neon-glow-primary"
           >
             <span className="relative z-10 flex items-center gap-2">
@@ -292,8 +310,12 @@ export default function DashboardPage() {
               key={mod.id}
               variants={cardVariant}
               onClick={() => {
-                if (mod.href) router.push(mod.href);
+                if (mod.href) {
+                  router.push(mod.href);
+                  console.log(`Click module ${mod.title}`);
+                }
               }}
+              whileTap={{ scale: 0.98 }}
               className={`group relative bg-[#1a1a1a] rounded-2xl overflow-hidden border border-white/5 transition-all duration-500 flex flex-col h-[340px] ${
                 mod.href ? "cursor-pointer hover:border-[#8eff71]/30 hover:shadow-[0_0_20px_rgba(142,255,113,0.15)]" : ""
               }`}

@@ -26,24 +26,24 @@ import {
 } from "lucide-react";
 import { useLabProgress } from "@/lib/progress";
 import { useAuth } from "@/lib/auth";
+import { usePathname } from "next/navigation";
 
 /* ── Navigation data ── */
-type NavItem = { label: string; icon: any; href: string; active?: boolean };
-const NAV_ITEMS: NavItem[] = [
-  { label: "Problem Formulator", icon: Brain, href: "#", active: true },
-  { label: "Search Playground", icon: Search, href: "#" },
-  { label: "Game Tree Studio", icon: GitBranch, href: "#" },
-  { label: "CSP Board", icon: LayoutGrid, href: "#" },
-  { label: "Agent Designer", icon: Bot, href: "#" },
-  { label: "Adaptive Quiz", icon: HelpCircle, href: "#" },
+const getNavItems = (pathname: string) => [
+  { label: "Problem Formulator", icon: Brain, href: "/dashboard/problem", active: pathname === "/dashboard/problem" },
+  { label: "Search Playground", icon: Search, href: "/dashboard/search", active: pathname === "/dashboard/search" },
+  { label: "Game Tree Studio", icon: GitBranch, href: "/dashboard/game", active: pathname === "/dashboard/game" },
+  { label: "CSP Board", icon: LayoutGrid, href: "/dashboard/csp", active: pathname === "/dashboard/csp" },
+  { label: "Agent Designer", icon: Bot, href: "/dashboard/agent", active: pathname === "/dashboard/agent" },
+  { label: "Adaptive Quiz", icon: HelpCircle, href: "/dashboard/quiz", active: pathname === "/dashboard/quiz" },
 ];
 
-const MOBILE_NAV = [
-  { label: "Lab", icon: FlaskConical, href: "/dashboard" },
-  { label: "Search", icon: Globe, href: "#" },
-  { label: "Agents", icon: Cpu, href: "#" },
-  { label: "Quiz", icon: Puzzle, href: "#" },
-] as const;
+const getMobileNav = (pathname: string) => [
+  { label: "Lab", icon: FlaskConical, href: "/dashboard", active: pathname === "/dashboard" },
+  { label: "Search", icon: Globe, href: "/dashboard/search", active: pathname === "/dashboard/search" },
+  { label: "Agents", icon: Cpu, href: "/dashboard/agent", active: pathname === "/dashboard/agent" },
+  { label: "Quiz", icon: Puzzle, href: "/dashboard/quiz", active: pathname === "/dashboard/quiz" },
+];
 
 /* ── Mastery Ring SVG ── */
 function MasteryRing({ percentage }: { percentage: number }) {
@@ -174,6 +174,7 @@ export default function LabLayout({
   
   const { progress, completedCount, completionPercentage, isLoaded } = useLabProgress();
   const { user, isLoading } = useAuth();
+  const pathname = usePathname();
 
   useEffect(() => {
     setIsMounted(true);
@@ -276,12 +277,13 @@ export default function LabLayout({
         </div>
 
         <nav className="flex-1 space-y-2 overflow-y-auto scrollbar-hide px-3">
-          {NAV_ITEMS.map((item) => {
+          {getNavItems(pathname || "").map((item) => {
             const Icon = item.icon;
             return (
               <Link
                 key={item.label}
                 href={item.href}
+                onClick={() => console.log(`Click module ${item.label}`)}
                 title={!isDesktopSidebarOpen ? item.label : undefined}
                 className={`flex items-center p-3 rounded-xl transition-all duration-200 group ${
                   item.active
@@ -377,13 +379,16 @@ export default function LabLayout({
                 </p>
               </div>
               <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-hide">
-                {NAV_ITEMS.map((item) => {
+                {getNavItems(pathname || "").map((item) => {
                   const Icon = item.icon;
                   return (
                     <Link
                       key={item.label}
                       href={item.href}
-                      onClick={() => setSidebarOpen(false)}
+                      onClick={() => {
+                        console.log(`Click module ${item.label}`);
+                        setSidebarOpen(false);
+                      }}
                       className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
                         item.active
                           ? "bg-[#39FF14]/10 text-[#39FF14] border-l-4 border-[#39FF14] font-bold translate-x-1"
@@ -416,14 +421,15 @@ export default function LabLayout({
 
       {/* ── Mobile Bottom Nav ── */}
       <nav className="fixed bottom-0 w-full md:hidden z-50 rounded-t-2xl bg-[#0e0e0e]/80 backdrop-blur-xl border-t border-white/10 shadow-[0_-10px_30px_rgba(0,0,0,0.8)] flex justify-around items-center h-16 px-4">
-        {MOBILE_NAV.map((item, i) => {
+        {getMobileNav(pathname || "").map((item) => {
           const Icon = item.icon;
-          const isActive = i === 0;
+          const isActive = item.active;
           return (
             <Link
               key={item.label}
               href={item.href}
-              className={`flex flex-col items-center justify-center transition-all duration-300 ${
+              onClick={() => console.log(`Click module ${item.label}`)}
+              className={`flex flex-col items-center justify-center transition-all duration-300 w-16 ${
                 isActive
                   ? "text-[#39FF14] scale-110"
                   : "text-gray-500 active:bg-white/5"
