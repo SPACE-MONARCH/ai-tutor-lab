@@ -2,9 +2,9 @@ import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
 // Ensure keys are read dynamically in server actions
 export interface CryptoPuzzle {
-  word1: string;
-  word2: string;
+  words: string[];
   result: string;
+  solution?: Record<string, number>;
 }
 
 export interface MapColoringPuzzle {
@@ -19,16 +19,21 @@ export interface GenerationResult<T> {
 }
 
 const CRYPTO_FALLBACKS: CryptoPuzzle[] = [
-  { word1: "BASE", word2: "BALL", result: "GAMES" },
-  { word1: "SEND", word2: "MORE", result: "MONEY" },
-  { word1: "CROSS", word2: "ROADS", result: "DANGER" },
-  { word1: "EAT", word2: "THAT", result: "APPLE" },
-  { word1: "MAC", word2: "PC", result: "APPLE" },
-  { word1: "POINT", word2: "ZERO", result: "ENERGY" },
-  { word1: "WATER", word2: "EARTH", result: "NATURE" },
-  { word1: "TEN", word2: "TEN", result: "TWENTY" },
-  { word1: "TWO", word2: "TWO", result: "FOUR" },
-  { word1: "HERE", word2: "THERE", result: "EVERYWHERE" },
+  { words: ['SEND', 'MORE'], result: 'MONEY', solution: {S:9,E:5,N:6,D:7,M:1,O:0,R:8,Y:2} },
+  { words: ['BASE', 'BALL'], result: 'GAMES', solution: {B:7,A:4,S:8,E:3,L:5,G:1,M:9} },
+  { words: ['CROSS', 'ROADS'], result: 'DANGER', solution: {C:9,R:6,O:2,S:3,A:5,D:1,N:8,G:7,E:4} },
+  { words: ['DONALD', 'GERALD'], result: 'ROBERT', solution: {D:5,O:2,N:6,A:4,L:8,G:1,E:9,R:7,B:3,T:0} },
+  { words: ['ONE', 'ONE'], result: 'TWO', solution: {O:2,N:3,E:1,T:4,W:6} },
+  { words: ['TWO', 'TWO'], result: 'FOUR', solution: {T:7,W:3,O:4,F:1,U:6,R:8} },
+  { words: ['TO', 'TO'], result: 'FOR', solution: {T:8,O:5,F:1,R:0} },
+  { words: ['SUN', 'FUN'], result: 'GUN', solution: {S:1,U:2,N:3,F:4,G:5} },
+  { words: ['HE', 'ME'], result: 'WE', solution: {H:1,E:0,M:2,W:3} },
+  { words: ['TO', 'GO'], result: 'OUT', solution: {T:2,O:1,G:8,U:0} },
+  { words: ['I', 'AM'], result: 'ME', solution: {I:1,A:8,M:9,E:0} },
+  { words: ['SEE', 'SEE'], result: 'YES', solution: {S:3,E:4,Y:6} },
+  { words: ['TEN', 'TEN', 'FORTY'], result: 'SIXTY', solution: {T:8,E:5,N:0,F:2,O:9,R:7,Y:6,S:3,I:1,X:4} },
+  { words: ['ME', 'ME'], result: 'BEE', solution: {M:6,E:0,B:1} },
+  { words: ['NO', 'NO', 'NO'], result: 'YES', solution: {N:6,O:4,Y:1,E:9,S:2} }
 ];
 
 const MAP_FALLBACKS: MapColoringPuzzle[] = [
@@ -66,38 +71,36 @@ export async function generateCryptarithmetic(): Promise<GenerationResult<Crypto
           responseSchema: {
             type: SchemaType.OBJECT,
             properties: {
-              word1: { type: SchemaType.STRING },
-              word2: { type: SchemaType.STRING },
-              result: { type: SchemaType.STRING },
+              words: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING }, description: "Array of words being summed" },
+              result: { type: SchemaType.STRING, description: "The resulting word sum" },
             },
-            required: ["word1", "word2", "result"],
+            required: ["words", "result"],
           },
         },
       });
 
-      const prompt = `Create a UNIQUE and CREATIVE cryptarithmetic puzzle: WORD1 + WORD2 = RESULT.
+      const prompt = `Create a UNIQUE and CREATIVE cryptarithmetic puzzle: WORD_1 + WORD_2 + ... = RESULT.
 [ENTROPY_SEED: ${Date.now()}-${Math.random()}] <- USE THIS TO GUARANTEE A NEW PUZZLE.
 Rules:
-- Use UPPERCASE English words only (2-5 letters each for word1 and word2, 3-6 for result).
-- DO NOT use SEND+MORE=MONEY or BASE+BALL=GAMES. Invent something obscure or thematic (like SPACE+TIME=COSMOS).
-- Total unique letters across all three words must be EXACTLY between 6 and 10.
+- Generate 2 to 3 words for the sum array. Use UPPERCASE English words only.
+- DO NOT use SEND MORE MONEY or BASE BALL GAMES. Invent something obscure or thematic (like SPACE+TIME=COSMOS).
+- Total unique letters across all words must be EXACTLY between 6 and 10.
 - The puzzle MUST be mathematically solvable (each letter maps to a unique digit 0-9, leading letters cannot be 0).
-Return JSON with fields: word1, word2, result.`;
+Return JSON with fields: words (array of strings), result.`;
 
       const result = await model.generateContent(prompt);
       const text = result.response.text();
       console.log(`[CSP-Genkit] Raw Gemini response (Attempt ${attempt}):`, text);
       const data = JSON.parse(text) as CryptoPuzzle;
 
-      if (!data.word1 || !data.word2 || !data.result) {
+      if (!data.words || data.words.length < 2 || !data.result) {
         throw new Error("Gemini returned incomplete JSON: " + text);
       }
 
-      data.word1 = data.word1.toUpperCase();
-      data.word2 = data.word2.toUpperCase();
+      data.words = data.words.map(w => w.toUpperCase());
       data.result = data.result.toUpperCase();
 
-      console.log("[CSP-Genkit] Parsed puzzle:", `${data.word1} + ${data.word2} = ${data.result}`);
+      console.log("[CSP-Genkit] Parsed puzzle:", `${data.words.join(" + ")} = ${data.result}`);
       return { data, error: null, fromFallback: false };
     } catch (error: any) {
       console.error(`[CSP-Genkit] Attempt ${attempt} failed:`, error?.message || error);

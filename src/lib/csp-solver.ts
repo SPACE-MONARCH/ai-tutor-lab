@@ -24,7 +24,7 @@ export interface CSPProblemOptions {
   type: CSPType;
   useMRV: boolean;
   useForwardChecking: boolean;
-  cryptoEquation?: { word1: string; word2: string; result: string };
+  cryptoEquation?: { words: string[]; result: string };
   mapData?: { regions: string[]; edges: [string, string][] };
 }
 
@@ -68,11 +68,11 @@ export function solveCSP(options: CSPProblemOptions): CSPResult {
   let mapEdges: [string, string][] = [];
 
   if (type === "cryptarithmetic" && cryptoEquation) {
-    const { word1, word2, result } = cryptoEquation;
-    const allLetters = Array.from(new Set((word1 + word2 + result).split("")));
+    const { words, result } = cryptoEquation;
+    const allLetters = Array.from(new Set([...words.join("").split(""), ...result.split("")]));
     vars = allLetters;
 
-    const leadingLetters = new Set([word1[0], word2[0], result[0]]);
+    const leadingLetters = new Set([...words.map(w => w[0]), result[0]]);
     vars.forEach((v) => {
       initialDomains[v] = leadingLetters.has(v)
         ? [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -131,10 +131,9 @@ export function solveCSP(options: CSPProblemOptions): CSPResult {
       const allAssigned = vars.every((v) => assigns[v] !== undefined || v === variable);
       if (allAssigned && cryptoEquation) {
         const testAsgn = { ...assigns, [variable]: value };
-        const v1 = getValue(cryptoEquation.word1, testAsgn);
-        const v2 = getValue(cryptoEquation.word2, testAsgn);
+        const vSum = cryptoEquation.words.reduce((sum, word) => sum + getValue(word, testAsgn), 0);
         const vRes = getValue(cryptoEquation.result, testAsgn);
-        return v1 + v2 === vRes;
+        return vSum === vRes;
       }
       return true;
     }

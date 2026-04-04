@@ -40,7 +40,11 @@ const COLORS: Record<string, string> = {
   Blue: "#3366ff",
 };
 
-const DEFAULT_CRYPTO: CryptoPuzzle = { word1: "SEND", word2: "MORE", result: "MONEY" };
+const DEFAULT_CRYPTO: CryptoPuzzle = {
+  words: ["SEND", "MORE"],
+  result: "MONEY",
+  solution: {S:9,E:5,N:6,D:7,M:1,O:0,R:8,Y:2}
+};
 const DEFAULT_MAP: MapColoringPuzzle = {
   regions: ["WA", "NT", "SA", "Q", "NSW", "V", "T"],
   edges: [
@@ -159,6 +163,20 @@ export default function CSPBoardPage() {
 
   const handleInstantSolve = useCallback(() => {
     setManualMode(false);
+    
+    if (activeTab === "cryptarithmetic" && cryptoPuz.solution) {
+      setResult({
+        frames: [],
+        success: true,
+        finalAssignments: cryptoPuz.solution,
+        stats: { backtracks: 0, pruned: 0 }
+      });
+      setCurrentStep(0);
+      setShowInstantSolve(true);
+      setIsPlaying(false);
+      return;
+    }
+
     const r = solveCSP({
       type: activeTab,
       useMRV,
@@ -193,7 +211,7 @@ export default function CSPBoardPage() {
         const res = await generateCryptarithmetic();
         if (res.data) setCryptoPuz(res.data);
         if (res.fromFallback) setGenStatus({ text: "Using fallback pool...", type: "fallback" });
-        else if (res.data) setGenStatus({ text: `New puzzle: ${res.data.word1}+${res.data.word2}=${res.data.result}`, type: "success" });
+        else if (res.data) setGenStatus({ text: `New puzzle: ${res.data.words.join("+")}=${res.data.result}`, type: "success" });
       } else {
         const res = await generateMapColoring();
         if (res.data) setMapPuz(res.data);
@@ -445,13 +463,12 @@ export default function CSPBoardPage() {
           </div>
         ) : (
           <div className="flex flex-col items-end gap-4 space-y-4 font-mono select-none">
-            <div className="flex gap-2 justify-end w-full">
-              {cryptoPuz.word1.split("").map((l, i) => renderLetterBox(l, i))}
-            </div>
-            <div className="flex gap-2 items-center justify-end w-full">
-              <div className="text-3xl text-white font-bold w-12 md:w-16 flex justify-center">+</div>
-              {cryptoPuz.word2.split("").map((l, i) => renderLetterBox(l, i + 100))}
-            </div>
+            {cryptoPuz.words.map((word, wordIdx) => (
+              <div key={`word-${wordIdx}`} className="flex gap-2 items-center justify-end w-full">
+                {wordIdx > 0 && <div className="text-3xl text-white font-bold w-12 md:w-16 flex justify-center">+</div>}
+                {word.split("").map((l, i) => renderLetterBox(l, i + wordIdx * 100))}
+              </div>
+            ))}
             <div className="w-full h-1 bg-white/20 rounded-full my-2 relative" />
             <div className="flex gap-2 relative justify-end w-full">
               {cryptoPuz.result.split("").map((l, i) => renderLetterBox(l, i + 200))}
@@ -746,9 +763,9 @@ export default function CSPBoardPage() {
             <h3 className="text-xs uppercase font-bold text-[#8eff71] tracking-widest mb-2">CSP Definition</h3>
             {activeTab === "cryptarithmetic" ? (
               <ul className="text-xs text-[#adaaaa] space-y-1 list-disc list-inside">
-                <li><strong>Variables:</strong> {Array.from(new Set(`${cryptoPuz.word1}${cryptoPuz.word2}${cryptoPuz.result}`.split(""))).join(", ")}</li>
-                <li><strong>Domains:</strong> {"{0, 1, ..., 9}"}</li>
-                <li><strong>Constraints:</strong> Leading≠0, AllDiff, <br /> {cryptoPuz.word1} + {cryptoPuz.word2} = {cryptoPuz.result}</li>
+                <li><strong>Variables:</strong> {Array.from(new Set(`${cryptoPuz.words.join("")}${cryptoPuz.result}`.split(""))).join(", ")}</li>
+                <li><strong>Domain:</strong> 0-9 (AllDiff)</li>
+                <li><strong>Constraints:</strong> Leading≠0, AllDiff, <br /> {cryptoPuz.words.join(" + ")} = {cryptoPuz.result}</li>
               </ul>
             ) : (
               <ul className="text-xs text-[#adaaaa] space-y-1 list-disc list-inside">
