@@ -1,5 +1,5 @@
-<<<<<<< HEAD
-# 🧠 Synthetic Neuralist AI Lab
+
+#  AI TUTOR LAB
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Next.js](https://img.shields.io/badge/Powered%20by-Next.js%2016-black?logo=next.js)
@@ -21,7 +21,7 @@ An interactive, high-energy sandbox platform teaching heuristic search, constrai
 
 ---
 
-## 🗺️ Syllabus Map
+## Syllabus Map
 
 The application consists of **6 Fully Interactive Modules** mirroring a university AI Lab syllabus:
 
@@ -79,7 +79,4 @@ This repository automatically structures rewrites using `vercel.json`:
 
 ---
 
-*Made with ❤️ using Google Genkit + GCP.*
-=======
 # ai-tutor-lab
->>>>>>> 29df776491c743f879bccc71e146c7ebe55aab83
