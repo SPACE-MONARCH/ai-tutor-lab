@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🧠 Synthetic Neuralist AI Lab
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
@@ -79,3 +80,6 @@ This repository automatically structures rewrites using `vercel.json`:
 ---
 
 *Made with ❤️ using Google Genkit + GCP.*
+=======
+# ai-tutor-lab
+>>>>>>> 29df776491c743f879bccc71e146c7ebe55aab83
