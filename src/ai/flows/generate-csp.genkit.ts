@@ -16,6 +16,8 @@ export interface GenerationResult<T> {
   data: T | null;
   error: string | null;
   fromFallback: boolean;
+  fallbackIndex?: number;
+  fallbackTotal?: number;
 }
 
 const CRYPTO_FALLBACKS: CryptoPuzzle[] = [
@@ -43,21 +45,24 @@ const MAP_FALLBACKS: MapColoringPuzzle[] = [
   { regions: ["T1", "T2", "T3", "T4"], edges: [["T1","T2"],["T2","T3"],["T3","T4"],["T4","T1"],["T1","T3"],["T2","T4"]] },
 ];
 
-function randomFallback<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+function randomFallback<T>(arr: T[]): { item: T; index: number; total: number } {
+  const idx = Math.floor(Math.random() * arr.length);
+  return { item: arr[idx], index: idx + 1, total: arr.length };
 }
 
 const MAX_RETRIES = 3;
 
 export async function generateCryptarithmetic(): Promise<GenerationResult<CryptoPuzzle>> {
   if (typeof window === "undefined") {
-    return { data: randomFallback(CRYPTO_FALLBACKS), error: "SSG compile-time bypass wrapper", fromFallback: true };
+    const f = randomFallback(CRYPTO_FALLBACKS);
+    return { data: f.item, error: "SSG compile-time bypass wrapper", fromFallback: true, fallbackIndex: f.index, fallbackTotal: f.total };
   }
 
   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "";
   if (!apiKey) {
     console.warn("[CSP-Genkit] No NEXT_PUBLIC_GEMINI_API_KEY found in env. Using fallback puzzle.");
-    return { data: randomFallback(CRYPTO_FALLBACKS), error: "API key missing. Add NEXT_PUBLIC_GEMINI_API_KEY to .env.local (get one at ai.google.dev).", fromFallback: true };
+    const f = randomFallback(CRYPTO_FALLBACKS);
+    return { data: f.item, error: "API key missing. Add NEXT_PUBLIC_GEMINI_API_KEY to .env.local (get one at ai.google.dev).", fromFallback: true, fallbackIndex: f.index, fallbackTotal: f.total };
   }
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
@@ -105,23 +110,27 @@ Return JSON with fields: words (array of strings), result.`;
     } catch (error: any) {
       console.error(`[CSP-Genkit] Attempt ${attempt} failed:`, error?.message || error);
       if (attempt === MAX_RETRIES) {
-        return { data: randomFallback(CRYPTO_FALLBACKS), error: `Generation failed after ${MAX_RETRIES} attempts. Using fallback.`, fromFallback: true };
+        const f = randomFallback(CRYPTO_FALLBACKS);
+        return { data: f.item, error: `Generation failed after ${MAX_RETRIES} attempts. Using fallback.`, fromFallback: true, fallbackIndex: f.index, fallbackTotal: f.total };
       }
     }
   }
 
-  return { data: randomFallback(CRYPTO_FALLBACKS), error: "Unknown loop exit.", fromFallback: true };
+  const fb = randomFallback(CRYPTO_FALLBACKS);
+  return { data: fb.item, error: "Unknown loop exit.", fromFallback: true, fallbackIndex: fb.index, fallbackTotal: fb.total };
 }
 
 export async function generateMapColoring(): Promise<GenerationResult<MapColoringPuzzle>> {
   if (typeof window === "undefined") {
-    return { data: randomFallback(MAP_FALLBACKS), error: "SSG compile-time bypass wrapper", fromFallback: true };
+    const f = randomFallback(MAP_FALLBACKS);
+    return { data: f.item, error: "SSG compile-time bypass wrapper", fromFallback: true, fallbackIndex: f.index, fallbackTotal: f.total };
   }
 
   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "";
   if (!apiKey) {
     console.warn("[CSP-Genkit] No NEXT_PUBLIC_GEMINI_API_KEY found in env. Using fallback map.");
-    return { data: randomFallback(MAP_FALLBACKS), error: "API key missing. Add NEXT_PUBLIC_GEMINI_API_KEY to .env.local (get one at ai.google.dev).", fromFallback: true };
+    const f = randomFallback(MAP_FALLBACKS);
+    return { data: f.item, error: "API key missing. Add NEXT_PUBLIC_GEMINI_API_KEY to .env.local (get one at ai.google.dev).", fromFallback: true, fallbackIndex: f.index, fallbackTotal: f.total };
   }
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
@@ -167,10 +176,12 @@ Return JSON: { regions: string[], edges: string[][] }`;
     } catch (error: any) {
       console.error(`[CSP-Genkit] Attempt ${attempt} failed:`, error?.message || error);
       if (attempt === MAX_RETRIES) {
-        return { data: randomFallback(MAP_FALLBACKS), error: `Generation failed after ${MAX_RETRIES} attempts. Using fallback.`, fromFallback: true };
+        const f = randomFallback(MAP_FALLBACKS);
+        return { data: f.item, error: `Generation failed after ${MAX_RETRIES} attempts. Using fallback.`, fromFallback: true, fallbackIndex: f.index, fallbackTotal: f.total };
       }
     }
   }
 
-  return { data: randomFallback(MAP_FALLBACKS), error: "Unknown loop exit.", fromFallback: true };
+  const fb = randomFallback(MAP_FALLBACKS);
+  return { data: fb.item, error: "Unknown loop exit.", fromFallback: true, fallbackIndex: fb.index, fallbackTotal: fb.total };
 }

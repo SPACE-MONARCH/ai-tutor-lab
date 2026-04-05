@@ -2,7 +2,7 @@ import { genkit, z } from "genkit";
 import { gemini20Flash, googleAI } from "@genkit-ai/googleai";
 
 const ai = genkit({
-  plugins: [googleAI({ apiKey: process.env.GEMINI_API_KEY })],
+  plugins: [googleAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY })],
   model: gemini20Flash,
 });
 
@@ -19,9 +19,10 @@ export const quizExplanationFlow = ai.defineFlow(
     }),
   },
   async (input) => {
-    if (!process.env.GEMINI_API_KEY) {
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+    if (!apiKey) {
       return {
-        explanation: `(Offline Mode: The correct answer is **${input.correctAnswer}**. Your answer **${input.userAnswer}** was incorrect. Add GEMINI_API_KEY to .env.local for AI Tutor explanations!)`,
+        explanation: `(Offline Mode: The correct answer is **${input.correctAnswer}**. Your answer **${input.userAnswer}** was incorrect. Add NEXT_PUBLIC_GEMINI_API_KEY to .env.local for AI Tutor explanations!)`,
       };
     }
 

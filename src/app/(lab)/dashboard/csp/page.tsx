@@ -210,12 +210,12 @@ export default function CSPBoardPage() {
       if (activeTab === "cryptarithmetic") {
         const res = await generateCryptarithmetic();
         if (res.data) setCryptoPuz(res.data);
-        if (res.fromFallback) setGenStatus({ text: "Using fallback pool...", type: "fallback" });
+        if (res.fromFallback) setGenStatus({ text: `Using fallback pool (Puzzle #${res.fallbackIndex || 1}/${res.fallbackTotal || 15})`, type: "fallback" });
         else if (res.data) setGenStatus({ text: `New puzzle: ${res.data.words.join("+")}=${res.data.result}`, type: "success" });
       } else {
         const res = await generateMapColoring();
         if (res.data) setMapPuz(res.data);
-        if (res.fromFallback) setGenStatus({ text: "Using fallback pool...", type: "fallback" });
+        if (res.fromFallback) setGenStatus({ text: `Using fallback pool (Map #${res.fallbackIndex || 1}/${res.fallbackTotal || 4})`, type: "fallback" });
         else if (res.data) setGenStatus({ text: `New puzzle: Map with ${res.data.regions.length} regions`, type: "success" });
       }
     } catch (err: any) {
@@ -371,14 +371,14 @@ export default function CSPBoardPage() {
 
                   {/* Manual mode: color picker on selected */}
                   {manualMode && isSelected && (
-                    <g transform="translate(-22, 38)">
+                    <g transform="translate(-32, 42)">
                       {["Red", "Green", "Blue"].map((c, i) => (
                         <g key={c} onClick={(e) => { e.stopPropagation(); assignManualColor(id, c); }} className="cursor-pointer">
                           <circle
-                            cx={i * 22} cy={0} r={9}
+                            cx={i * 32} cy={0} r={14}
                             fill={COLORS[c]}
                             stroke={manualAssignments[id] === c ? "#fff" : "none"}
-                            strokeWidth={2}
+                            strokeWidth={3}
                           />
                         </g>
                       ))}

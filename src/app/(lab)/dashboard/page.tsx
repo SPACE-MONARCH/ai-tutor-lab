@@ -29,6 +29,7 @@ interface LabModule {
   progress?: number;         // 0-1
   lockMessage?: string;
   href?: string;
+  videoHover?: string;
 }
 
 const MODULES: LabModule[] = [
@@ -44,6 +45,7 @@ const MODULES: LabModule[] = [
     xp: "3/3 XP",
     scholars: "1.2k Scholars",
     href: "/dashboard/problem",
+    videoHover: "/media/sidebar_collapse_1774467854498.webp",
   },
   {
     id: 2,
@@ -56,7 +58,8 @@ const MODULES: LabModule[] = [
     status: "in-progress",
     xp: "0/3 XP",
     progress: 0.66,
-    href: "/dashboard/search"
+    href: "/dashboard/search",
+    videoHover: "/media/search_playground_test_1774432423091.webp",
   },
   {
     id: 3,
@@ -69,6 +72,7 @@ const MODULES: LabModule[] = [
     status: "resume",
     xp: "",
     href: "/dashboard/game",
+    videoHover: "/media/game_tree_studio_test_1774434825855.webp",
   },
   {
     id: 4,
@@ -81,6 +85,7 @@ const MODULES: LabModule[] = [
     status: "resume",
     xp: "0/3 XP",
     href: "/dashboard/csp",
+    videoHover: "/media/csp_generative_fixed_1774457865292.webp",
   },
   {
     id: 5,
@@ -93,6 +98,7 @@ const MODULES: LabModule[] = [
     status: "in-progress",
     xp: "0/3 XP",
     href: "/dashboard/agent",
+    videoHover: "/media/agent_designer_sim_fixed_1774462721596.webp",
   },
   {
     id: 6,
@@ -105,6 +111,7 @@ const MODULES: LabModule[] = [
     status: "in-progress",
     xp: "0/3 XP",
     href: "/dashboard/quiz",
+    videoHover: "/media/adaptive_quiz_flow_1774463744837.webp",
   },
 ];
 
@@ -140,7 +147,14 @@ function CardFooter({ mod }: { mod: LabModule }) {
               {mod.scholars}
             </span>
           </div>
-          <span className="text-xs font-bold text-[#8eff71]">{mod.xp}</span>
+          <div className="relative group/xp cursor-help ml-2">
+            <span className="text-xs font-bold text-[#8eff71] whitespace-nowrap">
+              {mod.xp}
+            </span>
+            <div className="opacity-0 w-max group-hover/xp:opacity-100 absolute bottom-full right-0 mb-2 px-2 py-1 bg-[#0a0a0a] border border-white/10 text-[#adaaaa] text-[10px] font-mono rounded pointer-events-none transition-opacity z-20">
+              Total XP earned: {mod.xp}
+            </div>
+          </div>
         </div>
       );
 
@@ -164,9 +178,14 @@ function CardFooter({ mod }: { mod: LabModule }) {
               ))}
             </div>
           )}
-          <span className="text-xs font-bold text-[#8eff71] ml-4 whitespace-nowrap">
-            {mod.xp}
-          </span>
+          <div className="relative group/xp cursor-help ml-4">
+            <span className="text-xs font-bold text-[#8eff71] whitespace-nowrap">
+              {mod.xp}
+            </span>
+            <div className="opacity-0 w-max group-hover/xp:opacity-100 absolute bottom-full right-0 mb-2 px-2 py-1 bg-[#0a0a0a] border border-white/10 text-[#adaaaa] text-[10px] font-mono rounded pointer-events-none transition-opacity z-20">
+              XP rewarded upon completion
+            </div>
+          </div>
         </div>
       );
 
@@ -322,13 +341,17 @@ export default function DashboardPage() {
             >
               {/* Image area */}
               <div className="h-40 bg-[#262626] relative overflow-hidden">
+                {mod.videoHover && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={mod.videoHover} alt="Visual Demo" className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 z-10" />
+                )}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   alt={mod.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60 group-hover:opacity-20"
                   src={mod.image}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] to-transparent z-10 pointer-events-none" />
                 <div className="absolute top-4 left-4 px-2 py-1 rounded bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-bold text-[#8eff71]">
                   MODULE {String(mod.id).padStart(2, "0")}
                 </div>

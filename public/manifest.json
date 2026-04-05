@@ -1,0 +1,16 @@
+{
+  "name": "Synthetic Neuralist AI Lab",
+  "short_name": "AI Lab",
+  "description": "Explore intelligent search, constraint satisfaction, and agents.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0e0e0e",
+  "theme_color": "#8eff71",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

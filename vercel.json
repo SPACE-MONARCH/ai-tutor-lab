@@ -1,0 +1,48 @@
+{
+  "version": 2,
+  "framework": "nextjs",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/csp",
+      "destination": "/dashboard/csp"
+    },
+    {
+      "source": "/search",
+      "destination": "/dashboard/search"
+    },
+    {
+      "source": "/games",
+      "destination": "/dashboard/game"
+    },
+    {
+      "source": "/quiz",
+      "destination": "/dashboard/quiz"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/media/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+       "source": "/sw.js",
+       "headers": [
+         {
+           "key": "Cache-Control",
+           "value": "public, max-age=0, must-revalidate"
+         }
+       ]
+    }
+  ]
+}

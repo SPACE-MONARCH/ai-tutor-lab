@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
+import { PWASetup } from "@/components/PWASetup";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-headline",
@@ -18,6 +19,8 @@ export const metadata: Metadata = {
   title: "AI Lab Explorer — Dashboard",
   description:
     "Master heuristic search, constraint satisfaction, and agent design in a high-energy AI sandbox.",
+  manifest: "/manifest.json",
+  themeColor: "#0e0e0e",
 };
 
 export default function RootLayout({
@@ -31,6 +34,7 @@ export default function RootLayout({
       className={`dark ${spaceGrotesk.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#0e0e0e] text-white font-[family-name:var(--font-body)]">
+        <PWASetup />
         {children}
       </body>
     </html>
